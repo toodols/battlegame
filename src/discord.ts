@@ -297,11 +297,10 @@ export function discord() {
 
 			function flushMessageBuffer() {
 				if (buffer.length > 0) {
-					for (let i = 0; i < buffer.length; i += 10) {
-						let head = buffer.slice(i, i + 10);
-						message.channel.send(head.join("\n"));
-						buffer = buffer.slice(i + 10);
-					}
+					let head = buffer.slice(0, 10);
+					message.channel.send(head.join("\n"));
+					buffer = buffer.slice(10);
+					resetDebounce(1000);
 				}
 			}
 

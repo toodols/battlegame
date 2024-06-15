@@ -7,3 +7,36 @@ features:
 -   items that do cool stuff
 
 made for a discord bot
+
+```
++BattleGame
+```
+
+```
+battle!setclass <class>
+```
+
+```
+battle!start [difficulty] [difficultyScale]
+```
+
+```
+battle!items
+```
+
+```
+battle!inspect <number>
+battle!inspectenemy <number>
+```
+
+```
+battle!use item[.active] [target]
+```
+
+```
+battle!buy <item-id>
+```
+
+```
+battle!continue
+```
