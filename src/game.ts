@@ -22,6 +22,8 @@ import { throwingKnives } from "./item/weapons/throwingKnives";
 import { woodenBow } from "./item/weapons/woodenBow";
 import { ominousFangs } from "./item/equipment/ominousFangs";
 import { crystalHeart } from "./item/equipment/crystalHeart";
+import { createEnemies } from "./spawning";
+import { puppeteerMask } from "./item/consumables/puppeteerMask";
 export enum GameState {
 	PreGame,
 	Game,
@@ -42,7 +44,10 @@ export interface Shop {
 	}[];
 }
 
-function selectRandomFromPool<T>(pool: T[], weight: (value: T) => number): T {
+export function selectRandomFromPool<T>(
+	pool: T[],
+	weight: (value: T) => number
+): T {
 	const sumWeight = pool.reduce((sum, current) => sum + weight(current), 0);
 	let value = Math.random();
 	let cur: T;
@@ -85,28 +90,7 @@ export class Game {
 		}
 		this.eventBuffer = [];
 	}
-	createEnemies() {
-		let difficultyGauge = this.difficulty;
-		let enemyTeam = [];
-		while (difficultyGauge > 0) {
-			let pool = enemies.filter(
-				(enemy) =>
-					enemy.difficultyCost <= difficultyGauge &&
-					(enemy.minDifficultyPresence || 0) <= this.difficulty &&
-					(enemy.maxDifficultyPresence || Infinity) >= this.difficulty
-			);
-			if (pool.length === 0) {
-				break;
-			}
-			const cur = selectRandomFromPool(
-				pool,
-				(descriptor) => descriptor.baseWeight
-			);
-			difficultyGauge -= cur.difficultyCost;
-			enemyTeam.push(cur!.init(this));
-		}
-		return enemyTeam;
-	}
+
 	onLevelClear() {
 		this.flushEvents();
 		this.io.onOutputEvent({
@@ -152,6 +136,7 @@ export class Game {
 			throwingKnives,
 			ominousFangs,
 			crystalHeart,
+			puppeteerMask,
 		];
 
 		const shop: Shop = { offers: [] };
@@ -176,7 +161,7 @@ export class Game {
 		this.levelNumber += 1;
 		this.currentLevel = new Level(
 			this,
-			this.createEnemies(),
+			createEnemies(this),
 			this.currentLevel?.players ||
 				Object.values(this.players).map((p) => p.entity!)
 		);
@@ -319,6 +304,9 @@ export class Game {
 					}
 					return;
 				case "continue":
+					if (this.state !== GameState.Shop) {
+						return;
+					}
 					if (this.hostPlayer?.id !== command.playerId) {
 						this.io.onOutputEvent({
 							type: "command-error",
@@ -332,6 +320,16 @@ export class Game {
 					return;
 				case "use-item":
 					if (this.state === GameState.Game) {
+						if (
+							this.players[command.playerId].entity! !==
+							this.currentLevel!.currentEntity
+						) {
+							this.io.onOutputEvent({
+								type: "command-error",
+								message: "Not your turn",
+							});
+							return;
+						}
 						const active = command.active;
 						if (canUseItemActive(command.item, active)) {
 							this.io.onOutputEvent({

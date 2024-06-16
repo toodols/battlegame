@@ -55,7 +55,7 @@ export function displayEvent(event: IOEvent): string {
 		case "game-start":
 			return "Game start";
 		case "entity-turn-start":
-			return `It is now ${event.entity.name}'s turn`;
+			return `It is now **${event.entity.name}**'s turn`;
 		case "entity-do-healing":
 			if (event.attack.source === event.target) {
 				return `🚑 **${event.attack.source!.name}** healed for ${
@@ -97,8 +97,8 @@ export function parseCommand(
 					difficultyScale: parseInt(args[1]) || 20,
 					// commandId: Math.floor(Math.random() * 10000000),
 				};
-			case "inspect":
-			case "inspectenemy":
+			case "stats":
+			case "enemystats":
 				if (game.state === GameState.PreGame) {
 					return displayEvent({
 						type: "command-error",
@@ -107,7 +107,7 @@ export function parseCommand(
 				}
 				let inspectTarget: Entity | undefined;
 				let team =
-					matched === "inspect"
+					matched === "enemystats"
 						? game.currentLevel!.players
 						: game.currentLevel!.enemies;
 				if (args[0]) {
@@ -115,7 +115,7 @@ export function parseCommand(
 						Object.values(team).find(
 							(player) => player.name === args[0]
 						) || team[parseInt(args[0]) - 1];
-				} else {
+				} else if (matched === "stats") {
 					inspectTarget = game.players[playerId].entity;
 				}
 				if (inspectTarget) {
@@ -148,7 +148,6 @@ Status Effects: ${inspectTarget.items
 				const item = game.players[playerId].entity?.getItem(name);
 				if (item && item.actives) {
 					const active = item.actives[activeName || "default"];
-					console.log(active);
 					if (!active) {
 						return null;
 					}
@@ -162,11 +161,13 @@ Status Effects: ${inspectTarget.items
 										value.typeId === target
 							  )
 							: game.currentLevel?.enemies[num - 1];
-						console.log(enemyTarget);
 						if (enemyTarget) {
 							targetEntities = [enemyTarget];
 						} else {
-							return null;
+							return displayEvent({
+								type: "command-error",
+								message: "Target not found",
+							});
 						}
 					} else if (active.targetType == TargetType.FriendlyOne) {
 						let num = parseInt(target);
@@ -187,8 +188,12 @@ Status Effects: ${inspectTarget.items
 						playerId,
 						targets: targetEntities,
 					};
+				} else {
+					return displayEvent({
+						type: "command-error",
+						message: "Item not found",
+					});
 				}
-				return null;
 			case "buy":
 				return {
 					type: "buy-item",
@@ -209,9 +214,66 @@ Status Effects: ${inspectTarget.items
 				if (game.state === GameState.PreGame) {
 					return null;
 				}
-				return game.players[playerId]
-					.entity!.items.map((item) => `${item.name} (${item.id})`)
-					.join(", ");
+				let consumables: Record<string, [number, Item]> = {};
+				let weapons: Record<string, [number, Item]> = {};
+				let abilities: Record<string, [number, Item]> = {};
+				let equipment: Record<string, [number, Item]> = {};
+				for (const item of game.players[playerId].entity!.items) {
+					let bin = (
+						{
+							[ItemType.Ability]: abilities,
+							[ItemType.Consumable]: consumables,
+							[ItemType.Weapon]: weapons,
+							[ItemType.Equipment]: equipment,
+						} as Record<
+							ItemType,
+							Record<string, [number, Item] | undefined>
+						>
+					)[item.type];
+					if (bin) {
+						if (bin[item.id]) {
+							bin[item.id]![0] += 1;
+						} else {
+							bin[item.id] = [1, item];
+						}
+					}
+				}
+				function displayItem([count, item]: [number, Item]) {
+					return [
+						`${count > 1 ? `${count}x ` : ""} **${item.name}** ${
+							item.actives?.default?.uses
+								? `(${item.actives.default.uses} uses)`
+								: ""
+						} \`${item.id}\`: ${item.description}`,
+						...(item.actives
+							? Object.entries(item.actives)
+									.map(([name, active]) =>
+										name === "default"
+											? null
+											: `- *${active.name}* \`${
+													item.id
+											  }.${active.id}\`${
+													active.usageEnergyCost
+														? ` (${active.usageEnergyCost} energy)`
+														: ""
+											  } ${active.description ?? ""}`
+									)
+									.filter((e) => e !== null)
+							: []),
+					].join("\n");
+				}
+				return [
+					Object.values(weapons).length > 0 ? "## Weapons" : "",
+					...Object.values(weapons).map(displayItem),
+					Object.values(abilities).length > 0 ? "## Abilities" : "",
+					...Object.values(abilities).map(displayItem),
+					Object.values(consumables).length > 0
+						? "## Consumables"
+						: "",
+					...Object.values(consumables).map(displayItem),
+					Object.values(equipment).length > 0 ? "## Equipment" : "",
+					...Object.values(equipment).map(displayItem),
+				].join("\n");
 			case "actions":
 				return (
 					"**" +
@@ -264,7 +326,10 @@ export function discord() {
 			GatewayIntentBits.GuildMembers,
 		],
 	});
-	let games: Record<string, Game> = {};
+	let games: Record<
+		string,
+		{ game: Game; buffer: string[]; resetDebounce: (time: number) => void }
+	> = {};
 	discordClient.login(process.env.DISCORD_TOKEN);
 	discordClient.on("ready", () => {
 		console.log("Bot is ready!");
@@ -282,9 +347,13 @@ export function discord() {
 			}
 
 			const game = new Game();
-
-			let buffer: string[] = [];
 			let timeoutId: any;
+
+			let data = (games[message.channelId] = {
+				game,
+				buffer: [] as string[],
+				resetDebounce,
+			});
 
 			function resetDebounce(delay: number) {
 				if (timeoutId) {
@@ -296,20 +365,24 @@ export function discord() {
 			}
 
 			function flushMessageBuffer() {
-				if (buffer.length > 0) {
-					let head = buffer.slice(0, 10);
-					message.channel.send(head.join("\n"));
-					buffer = buffer.slice(10);
+				if (data.buffer.length > 0) {
+					let head = data.buffer.slice(0, 10);
+					let msg = head.join("\n");
+					console.log(msg.length);
+					if (msg.length > 1900) {
+						msg = msg.slice(0, 1900) + "... (too long to display)";
+					}
+					message.channel.send(msg);
+					data.buffer = data.buffer.slice(10);
 					resetDebounce(1000);
 				}
 			}
 
 			game.io.onOutputEvent = function (event) {
-				buffer.push(displayEvent(event));
+				data.buffer.push(displayEvent(event));
 				resetDebounce(100);
 			};
 
-			games[message.channelId] = game;
 			game.io.onInputCommand({
 				type: "initialize",
 				players: players,
@@ -318,17 +391,18 @@ export function discord() {
 		} else if (games[message.channelId]) {
 			let command = parseCommand(
 				message.content,
-				games[message.channelId],
+				games[message.channelId].game,
 				message.author.id
 			);
 			if (typeof command === "string") {
 				if (command.length === 0) {
 					message.channel.send("???");
 				} else {
-					message.channel.send(command);
+					games[message.channelId].buffer.push(command);
+					games[message.channelId].resetDebounce(100);
 				}
 			} else if (command !== null) {
-				games[message.channelId].io.onInputCommand(command);
+				games[message.channelId].game.io.onInputCommand(command);
 			}
 		}
 	});

@@ -3,11 +3,11 @@ import { TargetType, AttackType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, roll, withProps, items } from "../items";
 
-export const strike: ItemDescriptor = {
-	name: "Strike",
+export const transfer: ItemDescriptor = {
+	name: "Transfer",
 	type: ItemType.Ability,
-	id: "strike",
-	description: "A deals 2d6 damage.",
+	id: "transfer",
+	description: "Transfers 30 energy to a friendly target.",
 	init: (owner: Entity): Item => {
 		return {
 			owner,
@@ -15,26 +15,20 @@ export const strike: ItemDescriptor = {
 			actives: {
 				default: {
 					appeal: () => APPEAL.LOW,
-					targetType: TargetType.EnemyOne,
+					usageEnergyCost: 30,
+					targetType: TargetType.FriendlyOne,
 					usageType: "per-turn",
 					use: (self, [target]: Entity[]) => {
-						let attack = {
-							type: AttackType.Physical,
-							gauge: roll(6) + roll(6),
-							source: self.owner,
-						};
-						let res = self.owner.doDamage(target, attack);
+						const res = target.recoverEnergy(30);
 						self.owner.game.io.onOutputEvent({
-							type: "entity-do-damage",
-							target,
-							attack: res.attack,
-							effectiveDamage: res.effectiveDamage,
+							type: "message",
+							message: `Gave ${res} to **${target.name}**`,
 						});
 						return { ok: true };
 					},
 				},
 			},
-			...withProps(strike),
+			...withProps(transfer),
 		};
 	},
 };

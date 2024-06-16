@@ -19,7 +19,7 @@ export const poisoned = {
 					self.owner.doDamage(self.owner, {
 						source: item,
 						gauge: roll(6) + roll(6),
-						lethal: false,
+						nonlethal: false,
 						type: AttackType.Poison,
 					});
 				},

@@ -38,7 +38,10 @@ export const undead: ItemDescriptor = {
 					);
 					self.owner.game.eventBuffer.push({
 						type: "message",
-						message: target.name + " has become an undead.",
+						message:
+							":zombie: " +
+							target.name +
+							" has become an undead.",
 					});
 				},
 				onEntityDamaging: (self, attack: Attack) => {

@@ -1,4 +1,4 @@
-import { ItemType, Item } from "..";
+import { ItemType, Item, APPEAL } from "..";
 import { TargetType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, items, withProps } from "../items";
@@ -14,7 +14,7 @@ export const brew: ItemDescriptor = {
 	type: ItemType.Ability,
 	id: "brew",
 	description:
-		"Brews a random potion. Brewed potions disappears after 3 turns.",
+		"At the cost of 25 energy, brews a random potion. Brewed potions disappears after 3 turns.",
 	init: (owner: Entity): Item => {
 		return {
 			owner,
@@ -23,7 +23,8 @@ export const brew: ItemDescriptor = {
 				default: {
 					targetType: TargetType.Self,
 					usageType: "per-turn",
-					usageEnergyCost: 20,
+					usageEnergyCost: 25,
+					appeal: () => APPEAL.FAVORABLE,
 					use: (self, targets) => {
 						const potionsPool = [
 							weaknessPotion,
@@ -45,7 +46,10 @@ export const brew: ItemDescriptor = {
 						});
 						for (const potion of potions) {
 							const item = potion.init(self.owner);
-							item.name = "Alchemist's " + item.name;
+							item.name = "Brewed " + item.name;
+							item.actives!.default.appeal = (self) =>
+								(1 - (self.turnsUntilDestroyed! - 1) / 3) *
+								APPEAL.HIGH;
 							item.turnsUntilDestroyed = 4; // +1 because it is not usable the first turn
 							self.owner.addItem(item);
 						}

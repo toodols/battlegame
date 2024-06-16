@@ -7,8 +7,7 @@ import { Desirability } from "..";
 export const rangerPassive = {
 	name: "Ranger Passive",
 	id: "ranger-passive",
-	type: ItemType.StatusEffect,
-	desirability: Desirability.Positive,
+	type: ItemType.ClassPassive,
 	description: "Ranged weapons have a 30% chance not to use ammo",
 	init: (owner: Entity): Item => {
 		const item: Item = {

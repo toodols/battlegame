@@ -10,7 +10,7 @@ export const weaknessPotion: ItemDescriptor = {
 	type: ItemType.Consumable,
 	id: "weakness-potion",
 	baseShopCost: 5,
-	baseShopWeight: 7,
+	baseShopWeight: 5,
 	description: "On use, apply 'Weakness' status effect to target enemy.",
 	init: (owner: Entity): Item => {
 		return {
@@ -37,7 +37,7 @@ export const healPotion: ItemDescriptor = {
 	type: ItemType.Consumable,
 	id: "heal-potion",
 	baseShopCost: 5,
-	baseShopWeight: 7,
+	baseShopWeight: 5,
 	description: "On use, heals 30 health to the target.",
 	init: (owner: Entity): Item => {
 		return {
@@ -68,7 +68,7 @@ export const poisonPotion: ItemDescriptor = {
 	type: ItemType.Consumable,
 	id: "poison-potion",
 	baseShopCost: 5,
-	baseShopWeight: 7,
+	baseShopWeight: 5,
 	description: "On use, apply 'Poison' status effect to target enemy.",
 	init: (owner: Entity): Item => {
 		return {
@@ -95,7 +95,7 @@ export const slownessPotion: ItemDescriptor = {
 	type: ItemType.Consumable,
 	id: "slowness-potion",
 	baseShopCost: 5,
-	baseShopWeight: 7,
+	baseShopWeight: 5,
 	description: "On use, apply 'Slowness' status effect to target enemy.",
 	init: (owner: Entity): Item => {
 		return {
@@ -116,3 +116,10 @@ export const slownessPotion: ItemDescriptor = {
 		};
 	},
 };
+
+export const potions = [
+	weaknessPotion,
+	poisonPotion,
+	slownessPotion,
+	healPotion,
+];

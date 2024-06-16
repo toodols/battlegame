@@ -7,6 +7,7 @@ import { items } from "../item/items";
 import { rest } from "../item/abilities/rest";
 import { stick } from "../item/weapons/stick";
 import { fireball } from "../item/abilities/fireball";
+import { transfer } from "../item/abilities/transfer";
 
 export const mage = (game: Game, player: Player) => {
 	const entity = new Entity(game);
@@ -19,5 +20,6 @@ export const mage = (game: Game, player: Player) => {
 	entity.addItem(fireball.init(entity));
 	entity.addItem(rest.init(entity));
 	entity.addItem(heal.init(entity));
+	entity.addItem(transfer.init(entity));
 	return entity;
 };

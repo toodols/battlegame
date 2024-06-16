@@ -1,6 +1,6 @@
 import { Entity } from "../entity";
 import { Game, Player } from "../game";
-import { fragment, fracture } from "../item/abilities/fracture";
+import { mist, disperse } from "../item/abilities/disperse";
 import { ItemDescriptor, items, withProps } from "../item/items";
 import { rest } from "../item/abilities/rest";
 import { stick } from "../item/weapons/stick";
@@ -20,6 +20,7 @@ const combatRedeployment: ItemDescriptor = {
 			actives: {
 				default: {
 					usageType: "per-turn",
+					usageEnergyCost: 20,
 					targetType: TargetType.FriendlyOne,
 					use: (self, [target]: Entity[]) => {
 						target.actionValue = -1;
@@ -41,10 +42,9 @@ export const ghost = (game: Game, player: Player) => {
 	entity.health = 70;
 	entity.speed = 100;
 	entity.addItem(stick.init(entity));
-	entity.addItem(fragment.init(entity));
-	entity.addItem(fracture.init(entity));
+	entity.addItem(mist.init(entity));
+	entity.addItem(disperse.init(entity));
 	entity.addItem(rest.init(entity));
-	entity.addItem(zombieSpawnEgg.init(entity));
 	entity.addItem(combatRedeployment.init(entity));
 	return entity;
 };

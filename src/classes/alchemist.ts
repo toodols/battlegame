@@ -1,7 +1,7 @@
 import { Entity } from "../entity";
 import { Game, Player } from "../game";
 import { brew } from "../item/abilities/brew";
-import { fragment, fracture } from "../item/abilities/fracture";
+import { mist, disperse } from "../item/abilities/disperse";
 import { rest } from "../item/abilities/rest";
 import { weaknessPotion } from "../item/consumables/potions";
 import { stick } from "../item/weapons/stick";

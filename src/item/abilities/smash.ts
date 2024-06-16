@@ -1,14 +1,13 @@
 import { ItemType, Item } from "..";
 import { TargetType, AttackType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, roll, withProps, items } from "../items";
+import { ItemDescriptor, roll, withProps } from "../items";
 
-export const fireball: ItemDescriptor = {
-	name: "Fireball",
+export const smash: ItemDescriptor = {
+	name: "Smash",
 	type: ItemType.Ability,
-	id: "fireball",
-	description:
-		"At the cost of 30, shoot a fiery explosion that deals 2d6 damage to all enemies.",
+	id: "smash",
+	description: "Deals 2d6 physical damage to every entity.",
 	init: (owner: Entity): Item => {
 		return {
 			owner,
@@ -17,13 +16,12 @@ export const fireball: ItemDescriptor = {
 				default: {
 					targetType: TargetType.EnemyAll,
 					usageType: "per-turn",
-					usageEnergyCost: 30,
+					usageEnergyCost: 20,
 					use: (self, targets: Entity[]) => {
 						for (const target of targets) {
 							let damage = {
-								type: AttackType.Fire,
+								type: AttackType.Physical,
 								gauge: roll(6) + roll(6),
-								source: self.owner,
 							};
 							let res = self.owner.doDamage(target, damage);
 							self.owner.game.io.onOutputEvent({
@@ -37,7 +35,7 @@ export const fireball: ItemDescriptor = {
 					},
 				},
 			},
-			...withProps(fireball),
+			...withProps(smash),
 		};
 	},
 };

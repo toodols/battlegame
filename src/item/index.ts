@@ -7,12 +7,24 @@ export enum ItemType {
 	Consumable,
 	Ability,
 	Equipment,
+	ClassPassive,
 }
 export enum Desirability {
 	Positive,
 	Negative,
 	Neutral,
 }
+
+// makes ai more likely to pick a certain chose
+export const APPEAL = {
+	CRITICAL: 100,
+	HIGH: 40,
+	FAVORABLE: 30,
+	NORMAL: 20,
+	LOW: 10,
+	NO: 0,
+};
+
 export interface Item {
 	owner: Entity;
 	id: string;
@@ -199,9 +211,13 @@ export interface Active {
 	wasUsedThisTurn?: boolean;
 	targetType: TargetType;
 	usageType: "per-turn" | "per-item-per-turn" | "unlimited";
+	description?: string;
 	canUse?: () => Result;
+	// undefined to defer to random selection
+	targeting?: (item: Item, active: Active) => Entity[] | undefined;
 	usageEnergyCost?: number;
 	name?: string;
+	appeal?: (self: Item) => number;
 	id?: string;
 	uses?: number;
 	destroyedAfterUses?: boolean;

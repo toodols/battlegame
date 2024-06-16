@@ -8,7 +8,8 @@ import { slimeBased } from "../item/statuses/slimeBased";
 export const fireSlime: EnemyDescriptor = {
 	id: "fire-slime",
 	difficultyCost: 10,
-	minDifficultyPresence: 10,
+	// midpoint 50
+	minDifficultyPresence: 0,
 	maxDifficultyPresence: 100,
 	baseWeight: 10,
 	init: (game: Game) => {
@@ -27,7 +28,7 @@ export const fireSlime: EnemyDescriptor = {
 export const waterSlime: EnemyDescriptor = {
 	id: "water-slime",
 	difficultyCost: 10,
-	minDifficultyPresence: 10,
+	minDifficultyPresence: 0,
 	maxDifficultyPresence: 100,
 	baseWeight: 10,
 	init: (game: Game) => {

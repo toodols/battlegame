@@ -1,4 +1,4 @@
-import { ItemType, Item } from "..";
+import { ItemType, Item, APPEAL } from "..";
 import { TargetType } from "../../attack";
 import { Entity } from "../../entity";
 import { items, withProps } from "../items";
@@ -17,6 +17,7 @@ export const chiliPeppers = {
 			transferrable: true,
 			actives: {
 				default: {
+					appeal: () => APPEAL.LOW,
 					targetType: TargetType.Self,
 					usageType: "unlimited",
 					use: (self, _targets) => {

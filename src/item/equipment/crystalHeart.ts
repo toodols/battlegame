@@ -16,11 +16,12 @@ export const crystalHeart: ItemDescriptor = {
 			owner,
 			passives: {
 				onEntityDeath: (self, res) => {
-					self.owner.health = self.owner.maxHealth / 50;
+					self.owner.health = self.owner.maxHealth / 2;
 					destroyItem(self);
+					res.didKill = false;
 					self.owner.game.eventBuffer.push({
 						type: "message",
-						message: "The Crystal Heart has shattered",
+						message: ":gem:The Crystal Heart has shattered",
 					});
 				},
 			},

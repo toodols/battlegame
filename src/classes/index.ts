@@ -6,6 +6,7 @@ import { fighter } from "./fighter";
 import { ghost } from "./ghost";
 import { mage } from "./mage";
 import { ranger } from "./ranger";
+import { test } from "./test";
 
 export const classes = {
 	mage,
@@ -13,4 +14,5 @@ export const classes = {
 	fighter,
 	alchemist,
 	ranger,
+	test,
 };

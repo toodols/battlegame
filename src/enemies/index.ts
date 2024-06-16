@@ -1,6 +1,9 @@
 import { Entity } from "../entity";
 import { Game } from "../game";
+import { bandit } from "./bandit";
+import { golem } from "./golem";
 import { mannequin } from "./mannequin";
+import { necromancer } from "./necromancer";
 import { fireSlime, waterSlime } from "./slime";
 import { witch } from "./witch";
 import { zombie } from "./zombie";
@@ -10,10 +13,10 @@ export type EnemyDescriptor = {
 	minDifficultyPresence?: number;
 	maxDifficultyPresence?: number;
 	// the 'cost' of having this enemy
-	difficultyCost: number;
+	difficultyCost?: number;
 	init: (game: Game) => Entity;
 	// how likely this enemy is to be picked
-	baseWeight: number;
+	baseWeight?: number;
 };
 export const enemies: EnemyDescriptor[] = [
 	fireSlime,
@@ -21,4 +24,7 @@ export const enemies: EnemyDescriptor[] = [
 	witch,
 	zombie,
 	mannequin,
+	golem,
+	necromancer,
+	bandit,
 ];

@@ -18,7 +18,7 @@ export const spicy = {
 					const res = self.owner.takeDamage({
 						source: null,
 						gauge: roll(6) + roll(6) + roll(6),
-						lethal: false,
+						nonlethal: true,
 						type: AttackType.Piercing,
 					});
 					self.owner.game.io.onOutputEvent({
@@ -34,7 +34,7 @@ export const spicy = {
 					const res = self.owner.takeDamage({
 						source: null,
 						gauge: roll(6) + roll(6) + roll(6),
-						lethal: false,
+						nonlethal: true,
 						type: AttackType.Piercing,
 					});
 					self.owner.game.io.onOutputEvent({

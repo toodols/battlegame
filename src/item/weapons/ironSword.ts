@@ -3,12 +3,11 @@ import { TargetType, AttackType } from "../../attack";
 import { Entity } from "../../entity";
 import { withProps, items, ItemDescriptor, roll } from "../items";
 
-export const dullSword: ItemDescriptor = {
-	name: "Dull Sword",
+export const ironSword: ItemDescriptor = {
+	name: "Iron Sword",
 	type: ItemType.Weapon,
-	id: "dull-sword",
-	description:
-		"A basic sword. Slash: Do 3d6 damage to 1 target. Sweep: At the cost of 20 energy, do 2d4 damage to all targets",
+	id: "iron-sword",
+	description: "A basic sword.",
 	init: (owner: Entity): Item => {
 		return {
 			owner,
@@ -17,6 +16,7 @@ export const dullSword: ItemDescriptor = {
 				sweep: {
 					name: "Sweep",
 					id: "sweep",
+					description: "Deals 2d6 damage to all targets",
 					usageEnergyCost: 20,
 					targetType: TargetType.EnemyAll,
 					usageType: "per-turn",
@@ -24,7 +24,7 @@ export const dullSword: ItemDescriptor = {
 						for (const target of targets) {
 							let res = self.owner.doDamage(target, {
 								type: AttackType.Physical,
-								gauge: roll(4) + roll(4),
+								gauge: roll(6) + roll(6),
 								source: self.owner,
 							});
 							self.owner.game.io.onOutputEvent({
@@ -42,11 +42,12 @@ export const dullSword: ItemDescriptor = {
 					id: "slash",
 					targetType: TargetType.EnemyOne,
 					usageType: "per-turn",
+					description: "Deals 4d6 damage to all targets",
 					usageEnergyCost: 0,
 					use: (self, [target]: Entity[]) => {
 						let res = self.owner.doDamage(target, {
 							type: AttackType.Physical,
-							gauge: roll(6) + roll(6) + roll(6),
+							gauge: roll(6) + roll(6) + roll(6) + roll(6),
 							source: self.owner,
 						});
 						self.owner.game.io.onOutputEvent({
@@ -60,7 +61,7 @@ export const dullSword: ItemDescriptor = {
 					},
 				},
 			},
-			...withProps(dullSword),
+			...withProps(ironSword),
 		};
 	},
 };

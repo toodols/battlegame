@@ -17,7 +17,7 @@ import { slowness } from "./statuses/slowness";
 import { spicy } from "./statuses/spicy";
 import { stick } from "./weapons/stick";
 import { undead } from "./statuses/undead";
-import { dullSword } from "./weapons/sword";
+import { dullSword } from "./weapons/dullSword";
 
 export function roll(n: number): number {
 	return Math.floor(Math.random() * n) + 1;

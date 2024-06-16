@@ -18,8 +18,12 @@ export const wealthTalisman: ItemDescriptor = {
 					atk.flatFactor += 1;
 				},
 				onEntityDamaged: (self, res) => {
-					if (res.effectiveDamage >= 0) {
+					if (res.effectiveDamage >= 10) {
 						self.owner.setCredits(self.owner.credits + 1);
+						self.owner.game.io.onOutputEvent({
+							type: "message",
+							message: "You got a credit",
+						});
 					}
 				},
 			},

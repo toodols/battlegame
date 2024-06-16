@@ -2,10 +2,10 @@ import { ItemType, Item } from "..";
 import { TargetType, AttackType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, items, roll, withProps } from "../items";
-export const fragment: ItemDescriptor = {
-	name: "Fragment",
+export const mist: ItemDescriptor = {
+	name: "Mist",
 	type: ItemType.StatusEffect,
-	id: "fragment",
+	id: "mist",
 	description:
 		"Increases your speed by 10 for each stack you have. Starts with 2 stacks.",
 	init: (owner: Entity): Item => {
@@ -18,17 +18,16 @@ export const fragment: ItemDescriptor = {
 					speed.flatFactor += 10 * item.data.stacks;
 				},
 			},
-			...withProps(fragment),
+			...withProps(mist),
 		};
 		return item;
 	},
 };
-export const fracture: ItemDescriptor = {
-	name: "Fracture",
+export const disperse: ItemDescriptor = {
+	name: "Disperse",
 	type: ItemType.Ability,
-	id: "fracture",
-	description:
-		"Lose 10% MAX HP. Gain 1 stack of Fragment: " + fragment.description,
+	id: "disperse",
+	description: "Lose 10% MAX HP. Gain 1 stack of Mist: " + mist.description,
 	init: (owner: Entity): Item => {
 		return {
 			owner,
@@ -49,7 +48,7 @@ export const fracture: ItemDescriptor = {
 					},
 				},
 			},
-			...withProps(fracture),
+			...withProps(disperse),
 		};
 	},
 };

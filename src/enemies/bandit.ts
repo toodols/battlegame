@@ -4,23 +4,24 @@ import { Game } from "../game";
 import { dullSword } from "../item/weapons/dullSword";
 import { undead } from "../item/statuses/undead";
 import { npcRest } from "../item/abilities/npcRest";
+import { strike } from "../item/abilities/strike";
+import { healPotion } from "../item/consumables/potions";
 
-export const zombie: EnemyDescriptor = {
-	id: "zombie",
-	difficultyCost: 20,
-	// midpoint 75
-	minDifficultyPresence: -75,
-	maxDifficultyPresence: 225,
-	baseWeight: 15,
+export const bandit: EnemyDescriptor = {
+	id: "bandit",
+	difficultyCost: 25,
+	// midpoint 100
+	minDifficultyPresence: -50,
+	maxDifficultyPresence: 250,
+	baseWeight: 10,
 	init: (game: Game) => {
 		const entity = new Entity(game);
-		entity.name = "Zombie";
+		entity.name = "Bandit";
 		entity.maxHealth = 50;
 		entity.health = 50;
 		entity.speed = 80;
-		entity.addItem(undead.init(entity));
-		entity.addItem(dullSword.init(entity));
-		entity.addItem(npcRest.init(entity));
+		entity.addItem(strike.init(entity));
+		entity.addItem(healPotion.init(entity));
 		return entity;
 	},
 };

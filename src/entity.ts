@@ -1,7 +1,8 @@
-import { Game, Result } from "./game";
+import { Game, Result, selectRandomFromPool } from "./game";
 import { Attack, AttackType, TargetType } from "./attack";
 import { PlayerId } from "./game";
 import {
+	APPEAL,
 	Active,
 	Item,
 	canUseItemActive,
@@ -100,33 +101,60 @@ export class Entity {
 				)
 				.filter((i) => i)
 				.flat() as any;
-			const [item, active] =
-				itemPool[Math.floor(itemPool.length * Math.random())];
-			let targets: Entity[] = [];
-			switch (active.targetType) {
-				case TargetType.EnemyAll:
-					targets = this.game
-						.currentLevel!.getEnemyOf(this)
-						.filter((entity) => entity.isAlive());
-					break;
-				case TargetType.FriendlyAll:
-					targets = this.team!.filter((entity) => entity.isAlive());
-					break;
-				case TargetType.EnemyOne:
-					const enemyTeam = this.game
-						.currentLevel!.getEnemyOf(this)
-						.filter((v) => v.isAlive());
-					targets = [
-						enemyTeam[Math.floor(Math.random() * enemyTeam.length)],
-					];
-					break;
-				case TargetType.FriendlyOne:
-					targets = [
-						this.team!.filter((entity) => entity.isAlive())[
-							Math.floor(Math.random() * this.team!.length)
-						],
-					];
-					break;
+
+			if (itemPool.length === 0) {
+				this.endTurnFlag = true;
+				return;
+			}
+			const [item, active] = selectRandomFromPool(
+				itemPool,
+				([item, active]) => active.appeal?.(item) || APPEAL.NORMAL
+			);
+			console.table(
+				itemPool.map(([i, a]) => {
+					return {
+						name: i.name,
+						activeName: a.name,
+						appeal: a.appeal?.(item) ?? APPEAL.NORMAL,
+					};
+				})
+			);
+			let targets: Entity[] | undefined;
+			if (active.targeting) {
+				targets = active.targeting(item, active);
+			}
+			if (targets === undefined) {
+				switch (active.targetType) {
+					case TargetType.EnemyAll:
+						targets = this.game
+							.currentLevel!.getEnemyOf(this)
+							.filter((entity) => entity.isAlive());
+						break;
+					case TargetType.FriendlyAll:
+						targets = this.team!.filter((entity) =>
+							entity.isAlive()
+						);
+						break;
+					case TargetType.EnemyOne:
+						const enemyTeam = this.game
+							.currentLevel!.getEnemyOf(this)
+							.filter((v) => v.isAlive());
+						targets = [
+							enemyTeam[
+								Math.floor(Math.random() * enemyTeam.length)
+							],
+						];
+						break;
+					case TargetType.FriendlyOne:
+						targets = [
+							this.team!.filter((entity) => entity.isAlive())[
+								Math.floor(Math.random() * this.team!.length)
+							],
+						];
+						break;
+					case TargetType.Self:
+						targets = [this];
+				}
 			}
 			this.game.io.onOutputEvent({
 				type: "entity-use-item",
@@ -196,7 +224,7 @@ export class Entity {
 		partialAttack.scaleFactor = partialAttack.scaleFactor || 1;
 		partialAttack.flatFactor = partialAttack.flatFactor || 0;
 		partialAttack.source = this;
-		partialAttack.lethal = partialAttack.lethal || true;
+		partialAttack.nonlethal = !!partialAttack.nonlethal;
 		let attack = partialAttack as Attack;
 		if (attack.type === AttackType.Healing) {
 			this.items.forEach((item) =>
@@ -227,7 +255,7 @@ export class Entity {
 	takeDamage(partialAttack: Partial<Attack>): AttackResult {
 		partialAttack.scaleFactor = partialAttack.scaleFactor || 1;
 		partialAttack.flatFactor = partialAttack.flatFactor || 0;
-		partialAttack.lethal = partialAttack.lethal || true;
+		partialAttack.nonlethal = !!partialAttack.nonlethal;
 		partialAttack.source = partialAttack.source || null;
 		let attack = partialAttack as Attack;
 		if (attack.type === AttackType.Healing) {
@@ -250,10 +278,15 @@ export class Entity {
 			this.items.forEach((item) =>
 				item.passives?.onEntityDamaging?.(item, attack)
 			);
+			console.log(
+				attack.nonlethal,
+				attack.nonlethal ? this.health - 1 : this.health,
+				this
+			);
 			const effectiveDamage = Math.max(
 				0,
 				Math.min(
-					attack.lethal === false ? this.health - 1 : this.health,
+					attack.nonlethal ? this.health - 1 : this.health,
 					(attack.scaleFactor || 1) * attack.gauge +
 						(attack.flatFactor || 0)
 				)
@@ -263,12 +296,12 @@ export class Entity {
 			this.items.forEach((item) =>
 				item.passives?.onEntityDamaged?.(item, res)
 			);
-			console.log(this.health);
-			if (this.health === 0) {
-				console.log("death");
+			if (res.didKill) {
 				this.items.forEach((item) =>
 					item.passives?.onEntityDeath?.(item, res)
 				);
+			}
+			if (res.didKill) {
 				this.game.eventBuffer.push({
 					type: "entity-death",
 					entity: this,
@@ -276,7 +309,6 @@ export class Entity {
 				});
 				this.game.currentLevel!.removeEntity(this);
 			}
-
 			return res;
 		}
 	}

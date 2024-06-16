@@ -8,7 +8,7 @@ export const throwingKnives: ItemDescriptor = {
 	type: ItemType.Weapon,
 	ranged: true,
 	id: "throwing-knives",
-	description: "Ranged weapon with 3 charges. Deals 2d6 damage.",
+	description: "Ranged weapon with 3 charges. Deals 3d6 damage.",
 	baseShopCost: 7,
 	baseShopWeight: 10,
 	init: (owner: Entity): Item => {
@@ -24,7 +24,7 @@ export const throwingKnives: ItemDescriptor = {
 					use: (self, [target]: Entity[]) => {
 						let res = self.owner.doDamage(target, {
 							type: AttackType.Physical,
-							gauge: roll(6) + roll(6),
+							gauge: roll(6) + roll(6) + roll(6),
 							source: self.owner,
 						});
 						self.owner.game.io.onOutputEvent({

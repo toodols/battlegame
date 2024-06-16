@@ -1,4 +1,4 @@
-import { ItemType, Item } from "..";
+import { ItemType, Item, APPEAL } from "..";
 import { TargetType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, items, withProps } from "../items";
@@ -16,6 +16,8 @@ export const energyDrink: ItemDescriptor = {
 			transferrable: true,
 			actives: {
 				default: {
+					appeal: (self) =>
+						self.owner.energy < 10 ? APPEAL.NORMAL : APPEAL.NO,
 					targetType: TargetType.Self,
 					usageType: "unlimited",
 					use: (self, [_target]: Entity[]) => {

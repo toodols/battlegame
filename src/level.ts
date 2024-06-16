@@ -25,6 +25,13 @@ export class Level {
 	reorder() {
 		this.actionQueue.sort((a, b) => a.actionValue - b.actionValue);
 	}
+	setTeam(entity: Entity, team: Team) {
+		this.enemies = this.enemies.filter((e) => e !== entity);
+		this.players = this.players.filter((e) => e !== entity);
+		entity.team = team;
+		team.push(entity);
+		this.reorder();
+	}
 	addEntity(entity: Entity, team: Team) {
 		entity.team = team;
 		entity.team!.push(entity);
