@@ -8,6 +8,7 @@ import { strike } from "../item/abilities/strike";
 import { withProps } from "../item/items";
 import { fireBased, waterBased } from "../item/statuses/elementBased";
 import { slimeBased } from "../item/statuses/slimeBased";
+import { Battle } from "../level";
 
 export const golemPassive = {
 	name: "Golem Passive",
@@ -20,12 +21,12 @@ export const golemPassive = {
 			passives: {
 				onEntityDeath: (self, attack) => {
 					const ent1 = golemite.init(self.owner.game);
-					self.owner.game.currentLevel!.addEntity(
+					(self.owner.game.level as Battle).addEntity(
 						ent1,
 						self.owner.team!
 					);
 					const ent2 = golemite.init(self.owner.game);
-					self.owner.game.currentLevel!.addEntity(
+					(self.owner.game.level as Battle).addEntity(
 						ent2,
 						self.owner.team!
 					);

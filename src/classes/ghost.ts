@@ -5,8 +5,9 @@ import { ItemDescriptor, items, withProps } from "../item/items";
 import { rest } from "../item/abilities/rest";
 import { stick } from "../item/weapons/stick";
 import { ItemType } from "../item";
-import { TargetType } from "../attack";
+import { TargetType, UsageType } from "../attack";
 import { zombieSpawnEgg } from "../item/consumables/zombieSpawnEgg";
+import { Battle } from "../level";
 
 // :)
 const combatRedeployment: ItemDescriptor = {
@@ -19,12 +20,13 @@ const combatRedeployment: ItemDescriptor = {
 			owner,
 			actives: {
 				default: {
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					usageEnergyCost: 20,
+					description: "Summons a friendly to act immediately",
 					targetType: TargetType.FriendlyOne,
 					use: (self, [target]: Entity[]) => {
 						target.actionValue = -1;
-						self.owner.game.currentLevel!.reorder();
+						(self.owner.game.level as Battle).reorder();
 						return { ok: true };
 					},
 				},
@@ -40,7 +42,7 @@ export const ghost = (game: Game, player: Player) => {
 	entity.name = player.name;
 	entity.maxHealth = 70;
 	entity.health = 70;
-	entity.speed = 100;
+	entity.speed = 120;
 	entity.addItem(stick.init(entity));
 	entity.addItem(mist.init(entity));
 	entity.addItem(disperse.init(entity));

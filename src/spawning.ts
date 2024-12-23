@@ -20,7 +20,7 @@ const calculateSizeWeight = (cost: number, diff: number) =>
 export function createEnemies(game: Game) {
 	let difficultyBudget = game.difficulty;
 	let enemyTeam = [];
-
+	console.log({ difficultyBudget });
 	while (difficultyBudget > 0) {
 		let pool = enemies
 			.filter(

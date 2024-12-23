@@ -1,7 +1,7 @@
 import { ItemType, Item, APPEAL } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, items, roll, withProps } from "../items";
+import { ItemDescriptor, items, withProps } from "../items";
 
 export const heal: ItemDescriptor = {
 	name: "Heal",
@@ -16,7 +16,7 @@ export const heal: ItemDescriptor = {
 				default: {
 					usageEnergyCost: 0,
 					targetType: TargetType.FriendlyOne,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					appeal: (self) =>
 						(1 - self.owner.health / self.owner.health) *
 						APPEAL.HIGH,
@@ -28,7 +28,11 @@ export const heal: ItemDescriptor = {
 					use: (self, [target]: Entity[]) => {
 						let healing = {
 							type: AttackType.Healing,
-							gauge: roll(6) + roll(6) + roll(6) + roll(6),
+							gauge:
+								owner.roll(6) +
+								owner.roll(6) +
+								owner.roll(6) +
+								owner.roll(6),
 							source: self.owner,
 						};
 						let res = target.doDamage(target, healing);

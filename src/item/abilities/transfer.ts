@@ -1,7 +1,7 @@
 import { ItemType, Item, APPEAL } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, roll, withProps, items } from "../items";
+import { ItemDescriptor, withProps, items } from "../items";
 
 export const transfer: ItemDescriptor = {
 	name: "Transfer",
@@ -17,7 +17,7 @@ export const transfer: ItemDescriptor = {
 					appeal: () => APPEAL.LOW,
 					usageEnergyCost: 30,
 					targetType: TargetType.FriendlyOne,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					use: (self, [target]: Entity[]) => {
 						const res = target.recoverEnergy(30);
 						self.owner.game.io.onOutputEvent({

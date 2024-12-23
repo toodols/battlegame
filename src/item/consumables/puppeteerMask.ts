@@ -1,6 +1,7 @@
 import { ItemType, Item, APPEAL, destroyItem } from "..";
-import { TargetType } from "../../attack";
+import { TargetType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
+import { Battle } from "../../level";
 import { items, withProps } from "../items";
 import { spicy } from "../statuses/spicy";
 
@@ -19,13 +20,13 @@ export const puppeteerMask = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyOne,
-					usageType: "unlimited",
+					usageType: UsageType.Unlimited,
 					use: (self, [target]) => {
 						if (
 							Math.random() <
 							Math.max(0, 20 / (10 - target.health))
 						) {
-							self.owner.game.currentLevel!.setTeam(
+							(self.owner.game.level as Battle).setTeam(
 								target,
 								self.owner.team!
 							);

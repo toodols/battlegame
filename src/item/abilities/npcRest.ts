@@ -1,7 +1,7 @@
 import { ItemType, Item, APPEAL } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, roll, withProps, items } from "../items";
+import { ItemDescriptor, withProps, items } from "../items";
 
 export const npcRest: ItemDescriptor = {
 	name: "Rest",
@@ -19,10 +19,13 @@ export const npcRest: ItemDescriptor = {
 						(1 - self.owner.energy / self.owner.maxEnergy) *
 						APPEAL.FAVORABLE,
 					targetType: TargetType.Self,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					use: (self, [_target]: Entity[]) => {
 						const energyRecovery =
-							roll(6) + roll(6) + roll(6) + roll(6);
+							owner.roll(6) +
+							owner.roll(6) +
+							owner.roll(6) +
+							owner.roll(6);
 
 						const energyGain =
 							self.owner.recoverEnergy(energyRecovery);

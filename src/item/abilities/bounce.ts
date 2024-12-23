@@ -1,7 +1,7 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, roll, withProps, items } from "../items";
+import { ItemDescriptor, withProps, items } from "../items";
 
 export const bounce: ItemDescriptor = {
 	name: "Bounce",
@@ -15,11 +15,11 @@ export const bounce: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyOne,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					use: (self, [target]: Entity[]) => {
 						let damage = {
 							type: AttackType.Physical,
-							gauge: roll(6),
+							gauge: owner.roll(6),
 						};
 						let res = self.owner.doDamage(target, damage);
 						self.owner.game.io.onOutputEvent({

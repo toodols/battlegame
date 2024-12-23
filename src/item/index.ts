@@ -1,6 +1,7 @@
 import { AttackResult, Entity } from "../entity";
-import { Attack, TargetType } from "../attack";
+import { Attack, TargetType, UsageType } from "../attack";
 import { Result } from "../game";
+import { Battle } from "../level";
 export enum ItemType {
 	StatusEffect,
 	Weapon,
@@ -25,6 +26,10 @@ export const APPEAL = {
 	NO: 0,
 };
 
+export const PASSIVE_PRIORITY = {
+	HIGH: 40,
+};
+
 export interface Item {
 	owner: Entity;
 	id: string;
@@ -37,6 +42,7 @@ export interface Item {
 	turnsUntilDestroyed?: number;
 	actives?: Record<string, Active>;
 	passives?: Passives;
+	passivePriority?: number;
 	data?: any;
 }
 
@@ -58,6 +64,7 @@ export function cloneItem(item: Item): Item {
 			for (const name in item.actives) {
 				newActives[name] = cloneActive(item.actives[name]);
 			}
+			newItem.actives = newActives;
 		} else {
 			newItem[k] = item[k as keyof Item];
 		}
@@ -66,6 +73,7 @@ export function cloneItem(item: Item): Item {
 }
 
 export function destroyItem(item: Item) {
+	item.passives?.deinit?.(item);
 	item.owner.items.forEach((i) => i.passives?.onEntityLoseItem?.(i, item));
 	item.owner.items = item.owner.items.filter((i) => i !== item);
 }
@@ -104,8 +112,8 @@ export function useItemActive(
 	}
 	targets = targets.filter((t) => t !== undefined && t.isAlive());
 	if (active.targetType === TargetType.EnemyAll) {
-		targets = item.owner.game
-			.currentLevel!.getEnemyOf(item.owner)
+		targets = (item.owner.game.level as Battle)
+			.getEnemyOf(item.owner)
 			.filter((entity) => entity.isAlive());
 	} else if (active.targetType === TargetType.FriendlyAll) {
 		targets = item.owner.team!.filter((entity) => entity.isAlive());
@@ -116,7 +124,8 @@ export function useItemActive(
 	if (
 		(targets.length === 0 && active.targetType !== TargetType.Self) ||
 		(active.targetType === TargetType.EnemyOne &&
-			targets[0].team !== game.currentLevel!.getEnemyOf(item.owner)) ||
+			targets[0].team !==
+				(game.level as Battle).getEnemyOf(item.owner)) ||
 		(active.targetType === TargetType.FriendlyOne &&
 			targets[0].team !== item.owner.team)
 	) {
@@ -131,8 +140,8 @@ export function useItemActive(
 		}
 	}
 
-	if (active.usageType === "per-turn") {
-	} else if (active.usageType === "per-item-per-turn") {
+	if (active.usageType === UsageType.PerTurn) {
+	} else if (active.usageType === UsageType.PerItemPerTurn) {
 		active.wasUsedThisTurn = true;
 	}
 	active.use(item, targets);
@@ -147,15 +156,16 @@ export function useItemActive(
 	} else if (active.destroyedAfterUses) {
 		destroyItem(item);
 	}
-	if (active.usageType === "per-turn") {
+	if (active.usageType === UsageType.PerTurn) {
 		item.owner.endTurnFlag = true;
-	} else if (active.usageType === "per-item-per-turn") {
+	} else if (active.usageType === UsageType.PerItemPerTurn) {
 	}
 	return { ok: true };
 }
 
 export interface Passives {
 	init?: (self: Item) => void;
+	deinit?: (self: Item) => void;
 	onEntityDeath?: (self: Item, res: AttackResult) => void;
 	onEntityKill?: (self: Item, target: Entity, damage: Attack) => void;
 	onLevelEnd?: (self: Item) => void;
@@ -183,7 +193,7 @@ export interface Passives {
 	onEntityGainItem?: (self: Item, item: Item) => void;
 	onEntityLoseItem?: (self: Item, item: Item) => void;
 	onEntityUseItem?: (
-		selsf: Item,
+		self: Item,
 		item: Item,
 		active: Active,
 		targets: Entity[]
@@ -210,7 +220,7 @@ export interface Passives {
 export interface Active {
 	wasUsedThisTurn?: boolean;
 	targetType: TargetType;
-	usageType: "per-turn" | "per-item-per-turn" | "unlimited";
+	usageType: UsageType;
 	description?: string;
 	canUse?: () => Result;
 	// undefined to defer to random selection

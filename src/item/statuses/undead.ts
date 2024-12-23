@@ -1,6 +1,7 @@
 import { ItemType, Item } from "..";
 import { Attack, AttackType } from "../../attack";
 import { Entity } from "../../entity";
+import { Battle } from "../../level";
 import { bounce } from "../abilities/bounce";
 import { strike } from "../abilities/strike";
 import { ItemDescriptor, withProps, items } from "../items";
@@ -32,7 +33,7 @@ export const undead: ItemDescriptor = {
 					} else {
 						entity.addItem(strike.init(entity));
 					}
-					target.game.currentLevel!.addEntity(
+					(target.game.level as Battle).addEntity(
 						entity,
 						self.owner.team!
 					);

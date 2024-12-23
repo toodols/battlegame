@@ -1,33 +1,13 @@
 import { classes } from "./classes";
-import { AttackType, TargetType } from "./attack";
-import { Level } from "./level";
+import { Battle, Level, Shop } from "./level";
 import { Entity } from "./entity";
 import { canUseItemActive, destroyItem, useItemActive } from "./item";
-import { populate } from "dotenv";
-import { EnemyDescriptor, enemies } from "./enemies";
-import { chiliPeppers } from "./item/consumables/chiliPeppers";
-import { ItemDescriptor } from "./item/items";
 import { IO, IOEvent } from "./io";
-import {
-	healPotion,
-	poisonPotion,
-	slownessPotion,
-	weaknessPotion,
-} from "./item/consumables/potions";
-import { goldenWristwatch } from "./item/equipment/goldenWristwatch";
-import { zombieSpawnEgg } from "./item/consumables/zombieSpawnEgg";
-import { wealthTalisman } from "./item/equipment/wealthTalisman";
-import { stick } from "./item/weapons/stick";
-import { throwingKnives } from "./item/weapons/throwingKnives";
-import { woodenBow } from "./item/weapons/woodenBow";
-import { ominousFangs } from "./item/equipment/ominousFangs";
-import { crystalHeart } from "./item/equipment/crystalHeart";
 import { createEnemies } from "./spawning";
-import { puppeteerMask } from "./item/consumables/puppeteerMask";
+
 export enum GameState {
 	PreGame,
 	Game,
-	Shop,
 }
 
 export interface Player {
@@ -35,13 +15,6 @@ export interface Player {
 	name: string;
 	className: string | null;
 	id: PlayerId;
-}
-
-export interface Shop {
-	offers: {
-		item: ItemDescriptor;
-		cost: number;
-	}[];
 }
 
 export function selectRandomFromPool<T>(
@@ -70,10 +43,9 @@ export class Game {
 	// how fast the difficulty grows per level
 	difficultyScale: number = 0;
 	levelNumber: number = 0;
-	currentLevel?: Level;
+	level?: Level;
 	state = GameState.PreGame;
 	hostPlayer?: Player;
-	shop?: Shop;
 	players: Record<PlayerId, Player> = {};
 	// only for death messages that i want to play *after* the damage message
 	eventBuffer: IOEvent[] = [];
@@ -91,106 +63,8 @@ export class Game {
 		this.eventBuffer = [];
 	}
 
-	onLevelClear() {
-		this.flushEvents();
-		this.io.onOutputEvent({
-			type: "level-clear",
-			sumActionValue: this.currentLevel!.sumActionValue,
-		});
-		// remove dead npcs
-		this.currentLevel!.players = this.currentLevel!.players.filter(
-			(entity) => entity.playerId || entity.health > 0
-		);
+	onLevelClear() {}
 
-		for (const player of Object.values(this.players)) {
-			const playerEntity = player.entity!;
-			playerEntity.setCredits(
-				playerEntity.credits + 5 + 3 * this.levelNumber
-			);
-			this.io.onOutputEvent({
-				type: "message",
-				message: `${playerEntity.name} now has ${playerEntity.credits} credits`,
-			});
-			playerEntity.takeDamage({
-				type: AttackType.Healing,
-				gauge: 50,
-				source: null,
-			});
-			playerEntity.recoverEnergy(50);
-		}
-		for (const player of Object.values(this.players)) {
-			const entity = player.entity!;
-			entity.items.forEach((item) => item.passives?.onLevelEnd?.(item));
-		}
-		this.state = GameState.Shop;
-		const shopPool = [
-			goldenWristwatch,
-			zombieSpawnEgg,
-			chiliPeppers,
-			poisonPotion,
-			healPotion,
-			weaknessPotion,
-			slownessPotion,
-			wealthTalisman,
-			woodenBow,
-			throwingKnives,
-			ominousFangs,
-			crystalHeart,
-			puppeteerMask,
-		];
-
-		const shop: Shop = { offers: [] };
-		const shopItemsCount = 2 + Math.floor(Math.sqrt(this.levelNumber));
-		for (let i = 0; i < shopItemsCount; i += 1) {
-			let selected = selectRandomFromPool(
-				shopPool,
-				(descriptor) => descriptor.baseShopWeight || 10
-			);
-			shop.offers.push({
-				cost: selected.baseShopCost || 5,
-				item: selected,
-			});
-		}
-		this.shop = shop;
-		this.io.onOutputEvent({
-			type: "display-shop",
-			shop: this.shop,
-		});
-	}
-	makeLevel() {
-		this.levelNumber += 1;
-		this.currentLevel = new Level(
-			this,
-			createEnemies(this),
-			this.currentLevel?.players ||
-				Object.values(this.players).map((p) => p.entity!)
-		);
-		for (const player of Object.values(this.players)) {
-			const entity = player.entity!;
-			entity.items.forEach((item) => item.passives?.onLevelStart?.(item));
-		}
-		this.doTurns();
-	}
-	doTurns() {
-		this.flushEvents();
-		while (
-			this.currentLevel!.currentEntity!.endTurnFlag &&
-			this.currentLevel!.levelConditionFlag === "ongoing"
-		) {
-			this.currentLevel!.currentEntity.endTurnFlag = false;
-			this.flushEvents();
-			this.currentLevel!.nextTurn();
-		}
-		if (this.currentLevel!.levelConditionFlag === "clear") {
-			this.currentLevel!.currentEntity.endTurnFlag = false;
-			this.onLevelClear();
-		} else if (this.currentLevel!.levelConditionFlag === "loss") {
-			this.io.onOutputEvent({
-				type: "message",
-				message: "you lose",
-			});
-		}
-	}
 	constructor() {
 		this.io.onInputCommand = (command) => {
 			const player = this.players[command.playerId];
@@ -200,7 +74,7 @@ export class Game {
 						this.players[playerId] = {
 							id: playerId,
 							name: command.players[playerId].name,
-							className: "mage",
+							className: "fighter",
 						};
 					}
 
@@ -241,7 +115,11 @@ export class Game {
 					}
 					this.state = GameState.Game;
 					this.io.onOutputEvent({ type: "game-start" });
-					this.makeLevel();
+					this.level = new Battle(
+						this,
+						createEnemies(this),
+						Object.values(this.players).map((p) => p.entity!)
+					);
 					return;
 				case "set-class":
 					if (this.state !== GameState.PreGame) {
@@ -274,7 +152,10 @@ export class Game {
 						});
 						return;
 					}
-					const offer = this.shop?.offers.find(
+					if (!(this.level instanceof Shop)) {
+						return;
+					}
+					const offer = this.level.offers.find(
 						(offer) => offer.item.id === command.name
 					);
 					if (!offer) {
@@ -293,7 +174,7 @@ export class Game {
 							entity: player.entity!,
 							item,
 						});
-						this.shop!.offers = this.shop!.offers.filter(
+						this.level.offers = this.level.offers.filter(
 							(o) => o !== offer
 						);
 					} else {
@@ -304,7 +185,7 @@ export class Game {
 					}
 					return;
 				case "continue":
-					if (this.state !== GameState.Shop) {
+					if (!(this.level instanceof Shop)) {
 						return;
 					}
 					if (this.hostPlayer?.id !== command.playerId) {
@@ -314,53 +195,65 @@ export class Game {
 						});
 						return;
 					}
+					this.level = new Battle(
+						this,
+						createEnemies(this),
+						Object.values(this.players).map((p) => p.entity!)
+					);
 					this.difficulty += this.difficultyScale;
-					this.makeLevel();
-					this.state = GameState.Game;
 					return;
 				case "use-item":
-					if (this.state === GameState.Game) {
-						if (
-							this.players[command.playerId].entity! !==
-							this.currentLevel!.currentEntity
-						) {
-							this.io.onOutputEvent({
-								type: "command-error",
-								message: "Not your turn",
-							});
-							return;
-						}
-						const active = command.active;
-						if (canUseItemActive(command.item, active)) {
-							this.io.onOutputEvent({
-								type: "entity-use-item",
-								item: command.item,
-								active,
-								targets: command.targets,
-								entity: player.entity!,
-							});
-							const res = useItemActive(
-								command.item,
-								active,
-								command.targets
-							);
-							if (res.ok) {
-								this.doTurns();
-							} else {
-								this.io.onOutputEvent({
-									type: "command-error",
-									message: res.error,
-								});
-							}
-						}
-
-						return;
-					} else {
+					if (this.state !== GameState.Game) {
 						this.io.onOutputEvent({
 							type: "command-error",
 							message: "The game has not started yet",
 						});
+						return;
 					}
+					if (!(this.level instanceof Battle)) {
+						this.io.onOutputEvent({
+							type: "command-error",
+							message: "Not in battle",
+						});
+						return;
+					}
+
+					if (
+						this.players[command.playerId].entity! !==
+						this.level!.currentEntity
+					) {
+						this.io.onOutputEvent({
+							type: "command-error",
+							message: "Not your turn",
+						});
+						return;
+					}
+
+					const active = command.active;
+					if (canUseItemActive(command.item, active)) {
+						this.io.onOutputEvent({
+							type: "entity-use-item",
+							item: command.item,
+							active,
+							targets: command.targets,
+							entity: player.entity!,
+						});
+						const res = useItemActive(
+							command.item,
+							active,
+							command.targets
+						);
+						if (res.ok) {
+							this.level.doTurns();
+						} else {
+							this.io.onOutputEvent({
+								type: "command-error",
+								message: res.error,
+							});
+						}
+					}
+
+					return;
 			}
 		};
 	}

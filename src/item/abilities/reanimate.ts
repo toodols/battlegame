@@ -1,8 +1,9 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { zombie } from "../../enemies/zombie";
 import { Entity } from "../../entity";
-import { ItemDescriptor, items, roll, withProps } from "../items";
+import { Battle } from "../../level";
+import { ItemDescriptor, items, withProps } from "../items";
 
 export const reanimate: ItemDescriptor = {
 	name: "Reanimate",
@@ -15,13 +16,13 @@ export const reanimate: ItemDescriptor = {
 			transferrable: false,
 			actives: {
 				default: {
-					usageEnergyCost: 40,
+					usageEnergyCost: 50,
 					targetType: TargetType.Self,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					use: (self, _target: Entity[]) => {
 						const entity = zombie.init(self.owner.game);
 						entity.name = "Reanimated " + entity.name;
-						self.owner.game.currentLevel!.addEntity(
+						(self.owner.game.level as Battle).addEntity(
 							entity,
 							self.owner.team!
 						);

@@ -15,10 +15,13 @@ export enum AttackType {
 	Water,
 	Ice,
 	Light,
+	Electric,
 	Poison,
 	Physical,
 	Healing,
 	Piercing,
+	Necrotic,
+	Psychic,
 }
 export enum TargetType {
 	FriendlyOne,
@@ -26,4 +29,10 @@ export enum TargetType {
 	FriendlyAll,
 	EnemyAll,
 	Self,
+}
+
+export enum UsageType {
+	PerTurn,
+	PerItemPerTurn,
+	Unlimited,
 }

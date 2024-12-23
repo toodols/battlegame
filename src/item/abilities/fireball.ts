@@ -1,7 +1,7 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, roll, withProps, items } from "../items";
+import { ItemDescriptor, withProps, items } from "../items";
 
 export const fireball: ItemDescriptor = {
 	name: "Fireball",
@@ -16,13 +16,13 @@ export const fireball: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyAll,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					usageEnergyCost: 30,
 					use: (self, targets: Entity[]) => {
 						for (const target of targets) {
 							let damage = {
 								type: AttackType.Fire,
-								gauge: roll(6) + roll(6),
+								gauge: owner.roll(6) + owner.roll(6),
 								source: self.owner,
 							};
 							let res = self.owner.doDamage(target, damage);

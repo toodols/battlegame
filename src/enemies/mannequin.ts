@@ -1,12 +1,10 @@
 import { EnemyDescriptor } from ".";
-import { TargetType } from "../attack";
+import { TargetType, UsageType } from "../attack";
 import { Entity } from "../entity";
 import { Game, Result } from "../game";
 import { ItemType, cloneItem } from "../item";
 import { ItemDescriptor, items, withProps } from "../item/items";
-import { rest } from "../item/abilities/rest";
 import { strike } from "../item/abilities/strike";
-import { npcRest } from "../item/abilities/npcRest";
 export const copy: ItemDescriptor = {
 	name: "Copy",
 	description: "Copies a random ability from a target. 3 Uses",
@@ -18,7 +16,7 @@ export const copy: ItemDescriptor = {
 			actives: {
 				default: {
 					uses: 3,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					targetType: TargetType.EnemyOne,
 					usageEnergyCost: 30,
 					use: (self, [target]: Entity[]): Result => {
@@ -46,14 +44,13 @@ export const mannequin: EnemyDescriptor = {
 	// midpoint 120
 	minDifficultyPresence: -60,
 	maxDifficultyPresence: 300,
-	baseWeight: 10,
+	baseWeight: 10000000,
 	init: (game: Game) => {
 		const entity = new Entity(game);
 		entity.name = "Mannequin";
-		entity.maxHealth = 150;
-		entity.health = 150;
+		entity.maxHealth = 100;
+		entity.health = 100;
 		entity.speed = 100;
-		entity.addItem(npcRest.init(entity));
 		entity.addItem(strike.init(entity));
 		entity.addItem(copy.init(entity));
 		return entity;

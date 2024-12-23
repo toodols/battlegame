@@ -1,29 +1,27 @@
-import { ItemType, Item, APPEAL } from "..";
+import { ItemType, Item } from "..";
 import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, withProps, items } from "../items";
 
-export const strike: ItemDescriptor = {
-	name: "Strike",
+export const bounce: ItemDescriptor = {
+	name: "Bounce",
 	type: ItemType.Ability,
-	id: "strike",
-	description: "A deals 2d6 damage.",
+	id: "bounce",
+	description: "A bouncing ability that deals 1d6 damage.",
 	init: (owner: Entity): Item => {
 		return {
 			owner,
 			transferrable: false,
 			actives: {
 				default: {
-					appeal: () => APPEAL.LOW,
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.PerTurn,
 					use: (self, [target]: Entity[]) => {
-						let attack = {
-							type: AttackType.Physical,
-							gauge: owner.roll(6) + owner.roll(6),
-							source: self.owner,
+						let damage = {
+							type: AttackType.Necrotic,
+							gauge: owner.roll(6),
 						};
-						let res = self.owner.doDamage(target, attack);
+						let res = self.owner.doDamage(target, damage);
 						self.owner.game.io.onOutputEvent({
 							type: "entity-do-damage",
 							target,
@@ -34,7 +32,8 @@ export const strike: ItemDescriptor = {
 					},
 				},
 			},
-			...withProps(strike),
+			...withProps(bounce),
 		};
 	},
 };
+

@@ -1,7 +1,7 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, items, roll, withProps } from "../items";
+import { ItemDescriptor, items, withProps } from "../items";
 export const mist: ItemDescriptor = {
 	name: "Mist",
 	type: ItemType.StatusEffect,
@@ -35,10 +35,10 @@ export const disperse: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.Self,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					usageEnergyCost: 50,
 					use: (self, [target]: Entity[]) => {
-						self.owner.getItem("fragment").data.stacks += 1;
+						self.owner.getItem("mist").data.stacks += 1;
 						self.owner.setMaxHealth(self.owner.maxHealth * 0.9);
 						self.owner.game.io.onOutputEvent({
 							type: "message",

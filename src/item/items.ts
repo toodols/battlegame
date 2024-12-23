@@ -19,9 +19,7 @@ import { stick } from "./weapons/stick";
 import { undead } from "./statuses/undead";
 import { dullSword } from "./weapons/dullSword";
 
-export function roll(n: number): number {
-	return Math.floor(Math.random() * n) + 1;
-}
+
 
 export interface ItemDescriptor {
 	name: string;

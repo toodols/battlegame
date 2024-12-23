@@ -1,14 +1,12 @@
 import { EnemyDescriptor } from ".";
 import { Entity } from "../entity";
 import { Game } from "../game";
-import { heal } from "../item/abilities/heal";
-import { rest } from "../item/abilities/rest";
 import { strike } from "../item/abilities/strike";
 import { brew } from "../item/abilities/brew";
-import { npcRest } from "../item/abilities/npcRest";
 import { Item, ItemType } from "../item";
 import { withProps } from "../item/items";
 import { potions } from "../item/consumables/potions";
+import { npcRest } from "../item/abilities/npcRest";
 
 export const witchPassive = {
 	name: "Witch Passive",

@@ -1,7 +1,8 @@
 import { ItemType, Item } from "..";
-import { TargetType } from "../../attack";
+import { TargetType, UsageType } from "../../attack";
 import { zombie } from "../../enemies/zombie";
 import { Entity } from "../../entity";
+import { Battle } from "../../level";
 import { items, withProps } from "../items";
 import { spicy } from "../statuses/spicy";
 
@@ -19,11 +20,11 @@ export const zombieSpawnEgg = {
 			actives: {
 				default: {
 					targetType: TargetType.Self,
-					usageType: "unlimited",
+					usageType: UsageType.Unlimited,
 					use: (self, _targets) => {
 						const entity = zombie.init(self.owner.game);
 						entity.name = "Friendly " + entity.name;
-						self.owner.game.currentLevel!.addEntity(
+						(self.owner.game.level as Battle).addEntity(
 							entity,
 							self.owner.team!
 						);

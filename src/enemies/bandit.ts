@@ -3,9 +3,9 @@ import { Entity } from "../entity";
 import { Game } from "../game";
 import { dullSword } from "../item/weapons/dullSword";
 import { undead } from "../item/statuses/undead";
-import { npcRest } from "../item/abilities/npcRest";
 import { strike } from "../item/abilities/strike";
 import { healPotion } from "../item/consumables/potions";
+import { throwingKnives } from "../item/weapons/throwingKnives";
 
 export const bandit: EnemyDescriptor = {
 	id: "bandit",
@@ -21,6 +21,7 @@ export const bandit: EnemyDescriptor = {
 		entity.health = 50;
 		entity.speed = 80;
 		entity.addItem(strike.init(entity));
+		entity.addItem(throwingKnives.init(entity));
 		entity.addItem(healPotion.init(entity));
 		return entity;
 	},

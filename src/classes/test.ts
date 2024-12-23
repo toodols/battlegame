@@ -13,6 +13,7 @@ import { wealthTalisman } from "../item/equipment/wealthTalisman";
 import { reanimate } from "../item/abilities/reanimate";
 import { puppeteerMask } from "../item/consumables/puppeteerMask";
 import { energyDrink } from "../item/consumables/energyDrink";
+import { advantage } from "../item/statuses/advantage";
 
 export const test = (game: Game, player: Player) => {
 	const entity = new Entity(game);
@@ -24,6 +25,13 @@ export const test = (game: Game, player: Player) => {
 	entity.maxEnergy = 100;
 	entity.energy = 100;
 	entity.addItem(stick.init(entity));
+	entity.addItem(advantage.init(entity));
+	entity.addItem(advantage.init(entity));
+	entity.addItem(advantage.init(entity));
+	entity.addItem(advantage.init(entity));
+	entity.addItem(advantage.init(entity));
+	entity.addItem(advantage.init(entity));
+	entity.addItem(fireball.init(entity));
 	entity.addItem(rest.init(entity));
 	entity.addItem(reanimate.init(entity));
 	entity.addItem(zombieSpawnEgg.init(entity));

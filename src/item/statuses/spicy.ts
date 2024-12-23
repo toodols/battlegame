@@ -1,7 +1,7 @@
 import { ItemType, Item, destroyItem } from "..";
 import { AttackType } from "../../attack";
 import { Entity } from "../../entity";
-import { items, roll, withProps } from "../items";
+import { items, withProps } from "../items";
 
 export const spicy = {
 	name: "Spicy",
@@ -17,7 +17,7 @@ export const spicy = {
 				init: (self) => {
 					const res = self.owner.takeDamage({
 						source: null,
-						gauge: roll(6) + roll(6) + roll(6),
+						gauge: owner.roll(6) + owner.roll(6) + owner.roll(6),
 						nonlethal: true,
 						type: AttackType.Piercing,
 					});
@@ -33,7 +33,7 @@ export const spicy = {
 				onEntityTurnStart: (self) => {
 					const res = self.owner.takeDamage({
 						source: null,
-						gauge: roll(6) + roll(6) + roll(6),
+						gauge: owner.roll(6) + owner.roll(6) + owner.roll(6),
 						nonlethal: true,
 						type: AttackType.Piercing,
 					});

@@ -5,6 +5,7 @@ import { Game } from "./game";
 import { TargetType } from "./attack";
 import { Entity } from "./entity";
 import { Active, Item, ItemType } from "./item";
+import { Battle, Shop } from "./level";
 
 export function formatItem(item: Item, active: Active): string {
 	const isDefault = item.actives!.default === active;
@@ -93,23 +94,23 @@ export function parseCommand(
 				return {
 					type: "start-game",
 					playerId,
-					initialDifficulty: parseInt(args[0]) || 60,
-					difficultyScale: parseInt(args[1]) || 20,
+					initialDifficulty: parseInt(args[0]) || 30,
+					difficultyScale: parseInt(args[1]) || 15,
 					// commandId: Math.floor(Math.random() * 10000000),
 				};
 			case "stats":
 			case "enemystats":
-				if (game.state === GameState.PreGame) {
-					return displayEvent({
-						type: "command-error",
-						message: "Game has not started yet",
-					});
+				if (
+					game.state !== GameState.Game ||
+					!(game.level instanceof Battle)
+				) {
+					return null;
 				}
 				let inspectTarget: Entity | undefined;
 				let team =
 					matched === "enemystats"
-						? game.currentLevel!.players
-						: game.currentLevel!.enemies;
+						? game.level.players
+						: game.level.enemies;
 				if (args[0]) {
 					inspectTarget =
 						Object.values(team).find(
@@ -119,16 +120,18 @@ export function parseCommand(
 					inspectTarget = game.players[playerId].entity;
 				}
 				if (inspectTarget) {
-					return `**${inspectTarget.name}** (${
-						inspectTarget.health
-					} / ${inspectTarget.maxHealth})
-Energy: ${inspectTarget.energy} / ${inspectTarget.maxEnergy}
-Credits: ${inspectTarget.credits}
-Speed: ${inspectTarget.getEffectiveSpeed()}
-Status Effects: ${inspectTarget.items
-						.filter((item) => item.type === ItemType.StatusEffect)
-						.map((i) => i.name)
-						.join(", ")}`;
+					return (
+						`**${inspectTarget.name}** (${inspectTarget.health} / ${inspectTarget.maxHealth})` +
+						`Energy: ${inspectTarget.energy} / ${inspectTarget.maxEnergy}` +
+						`Credits: ${inspectTarget.credits}` +
+						`Speed: ${inspectTarget.getEffectiveSpeed()}` +
+						`Status Effects: ${inspectTarget.items
+							.filter(
+								(item) => item.type === ItemType.StatusEffect
+							)
+							.map((i) => i.name)
+							.join(", ")}`
+					);
 				} else {
 					return displayEvent({
 						type: "command-error",
@@ -143,6 +146,18 @@ Status Effects: ${inspectTarget.items
 					className: args[0],
 				};
 			case "use":
+				if (
+					game.state !== GameState.Game ||
+					!(game.level instanceof Battle)
+				) {
+					return null;
+				}
+				if (args[0] === undefined) {
+					return displayEvent({
+						type: "command-error",
+						message: "Specify an item",
+					});
+				}
 				const [name, activeName] = args[0].split(".");
 				const target = args[1];
 				const item = game.players[playerId].entity?.getItem(name);
@@ -155,12 +170,12 @@ Status Effects: ${inspectTarget.items
 					if (active.targetType == TargetType.EnemyOne) {
 						let num = parseInt(target);
 						let enemyTarget = isNaN(num)
-							? game.currentLevel?.enemies.find(
+							? game.level?.enemies.find(
 									(value) =>
 										value.name === target ||
 										value.typeId === target
 							  )
-							: game.currentLevel?.enemies[num - 1];
+							: game.level?.enemies[num - 1];
 						if (enemyTarget) {
 							targetEntities = [enemyTarget];
 						} else {
@@ -175,7 +190,7 @@ Status Effects: ${inspectTarget.items
 							? Object.values(game.players).find(
 									(player) => player.name === target
 							  )?.entity
-							: game.currentLevel!.players[num - 1];
+							: game.level!.players[num - 1];
 						if (playerTarget) {
 							targetEntities = [playerTarget];
 						}
@@ -201,9 +216,12 @@ Status Effects: ${inspectTarget.items
 					playerId,
 				};
 			case "shop":
+				if (!(game.level instanceof Shop)) {
+					return null;
+				}
 				return displayEvent({
 					type: "display-shop",
-					shop: game.shop!,
+					shop: game.level,
 				});
 			case "continue":
 				return {
@@ -275,11 +293,17 @@ Status Effects: ${inspectTarget.items
 					...Object.values(equipment).map(displayItem),
 				].join("\n");
 			case "actions":
+				if (
+					game.state !== GameState.Game ||
+					!(game.level instanceof Battle)
+				) {
+					return null;
+				}
 				return (
 					"**" +
-					game.currentLevel?.currentEntity.name +
+					game.level?.currentEntity.name +
 					"** | " +
-					game.currentLevel?.actionQueue
+					game.level?.actionQueue
 						.map(
 							(entity) =>
 								`${entity.name} (${Math.floor(
@@ -289,8 +313,14 @@ Status Effects: ${inspectTarget.items
 						.join(", ")
 				);
 			case "enemies":
-				return game
-					.currentLevel!.enemies.map(
+				if (
+					game.state !== GameState.Game ||
+					!(game.level instanceof Battle)
+				) {
+					return null;
+				}
+				return game.level.enemies
+					.map(
 						(entity, idx) =>
 							`${idx}. ${!entity.isAlive() ? "~~" : ""}**${
 								entity.name
@@ -300,8 +330,14 @@ Status Effects: ${inspectTarget.items
 					)
 					.join("\n");
 			case "friendlies":
-				return game
-					.currentLevel!.players.map(
+				if (
+					game.state !== GameState.Game ||
+					!(game.level instanceof Battle)
+				) {
+					return null;
+				}
+				return game.level.players
+					.map(
 						(entity, idx) =>
 							`${idx}. ${!entity.isAlive() ? "~~" : ""}**${
 								entity.name
@@ -368,7 +404,6 @@ export function discord() {
 				if (data.buffer.length > 0) {
 					let head = data.buffer.slice(0, 10);
 					let msg = head.join("\n");
-					console.log(msg.length);
 					if (msg.length > 1900) {
 						msg = msg.slice(0, 1900) + "... (too long to display)";
 					}

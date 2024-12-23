@@ -1,7 +1,8 @@
 import { Attack } from "./attack";
 import { Entity } from "./entity";
 import { Active, Item } from "./item";
-import { PlayerId, Player, Shop } from "./game";
+import { PlayerId, Player } from "./game";
+import { Shop } from "./level";
 
 export type IOCommand = (
 	| {

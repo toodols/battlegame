@@ -1,5 +1,5 @@
 import { ItemType, Item, APPEAL } from "..";
-import { TargetType } from "../../attack";
+import { TargetType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, items, withProps } from "../items";
 import {
@@ -22,7 +22,7 @@ export const brew: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.Self,
-					usageType: "per-turn",
+					usageType: UsageType.PerTurn,
 					usageEnergyCost: 25,
 					appeal: () => APPEAL.FAVORABLE,
 					use: (self, targets) => {
@@ -47,9 +47,12 @@ export const brew: ItemDescriptor = {
 						for (const potion of potions) {
 							const item = potion.init(self.owner);
 							item.name = "Brewed " + item.name;
-							item.actives!.default.appeal = (self) =>
-								(1 - (self.turnsUntilDestroyed! - 1) / 3) *
-								APPEAL.HIGH;
+							item.actives!.default.appeal = (self) => {
+								return (
+									(1 - (self.turnsUntilDestroyed! - 1) / 3) *
+									APPEAL.HIGH
+								);
+							};
 							item.turnsUntilDestroyed = 4; // +1 because it is not usable the first turn
 							self.owner.addItem(item);
 						}

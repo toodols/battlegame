@@ -9,7 +9,7 @@ import {
 	destroyItem,
 	useItemActive as useItemActive,
 } from "./item";
-import { Team } from "./level";
+import { Battle, Team } from "./level";
 
 export type AttackResult = {
 	effectiveDamage: number;
@@ -17,19 +17,49 @@ export type AttackResult = {
 	attack: Attack;
 };
 
+function rollWithAdvantage(n: number, advantage: number): number {
+	if (advantage >= 0) {
+		let max = Math.floor(Math.random() * n) + 1;
+		for (let i = 0; i < advantage; i++) {
+			let roll = Math.floor(Math.random() * n) + 1;
+			if (roll > max) {
+				max = roll;
+			}
+		}
+		return max;
+	} else {
+		let min = Math.floor(Math.random() * n) + 1;
+		for (let i = 0; i < -advantage; i++) {
+			let roll = Math.floor(Math.random() * n) + 1;
+			if (roll < min) {
+				min = roll;
+			}
+		}
+		return min;
+	}
+}
+
 export class Entity {
 	name: string = "Unnamed entity";
 	team?: Team;
 	typeId: string = "blank";
 	health: number = 100;
 	maxHealth: number = 100;
+	defense: number = 0;
 	energy: number = 100;
 	maxEnergy: number = 100;
+	// advantage > 0: roll |advantage| + 1 die, picking the highest one
+	// advantage < 0: roll |advantage| + 1 die, picking the lowest one
+	advantage: number = 0;
 	credits: number = 0;
 	playerId?: PlayerId;
 	speed: number = 100;
 	items: Item[] = [];
 	endTurnFlag = false;
+
+	roll(n: number) {
+		return rollWithAdvantage(n, this.advantage);
+	}
 	consumeCredits(amount: number): Result {
 		if (this.credits >= amount) {
 			this.setCredits(this.credits - amount);
@@ -76,6 +106,8 @@ export class Entity {
 		item.passives?.init?.(item);
 	}
 	turnStart() {
+		// passively regenerate energy
+		this.recoverEnergy(10);
 		if (this.playerId) {
 			this.game.io.onOutputEvent({
 				type: "entity-turn-start",
@@ -88,6 +120,11 @@ export class Entity {
 			this.items.forEach((item) =>
 				item.passives?.onEntityTurnStart?.(item)
 			);
+			if (!this.isAlive()) {
+				// don't allow enemy to act if they die to dot
+				this.endTurnFlag = true;
+				return;
+			}
 			// ai part
 			const itemPool: [Item, Active][] = this.items
 				.map(
@@ -108,14 +145,14 @@ export class Entity {
 			}
 			const [item, active] = selectRandomFromPool(
 				itemPool,
-				([item, active]) => active.appeal?.(item) || APPEAL.NORMAL
+				([i, active]) => active.appeal?.(i) ?? APPEAL.NORMAL
 			);
 			console.table(
 				itemPool.map(([i, a]) => {
 					return {
 						name: i.name,
 						activeName: a.name,
-						appeal: a.appeal?.(item) ?? APPEAL.NORMAL,
+						appeal: a.appeal?.(i) ?? APPEAL.NORMAL,
 					};
 				})
 			);
@@ -126,8 +163,8 @@ export class Entity {
 			if (targets === undefined) {
 				switch (active.targetType) {
 					case TargetType.EnemyAll:
-						targets = this.game
-							.currentLevel!.getEnemyOf(this)
+						targets = (this.game.level as Battle)
+							.getEnemyOf(this)
 							.filter((entity) => entity.isAlive());
 						break;
 					case TargetType.FriendlyAll:
@@ -136,14 +173,22 @@ export class Entity {
 						);
 						break;
 					case TargetType.EnemyOne:
-						const enemyTeam = this.game
-							.currentLevel!.getEnemyOf(this)
+						const enemyTeam = (this.game.level as Battle)
+							.getEnemyOf(this)
 							.filter((v) => v.isAlive());
 						targets = [
 							enemyTeam[
 								Math.floor(Math.random() * enemyTeam.length)
 							],
 						];
+						if (targets[0] === undefined) {
+							this.game.io.onOutputEvent({
+								type: "message",
+								message: "ERROR CHECK LOGS",
+							});
+							console.log(enemyTeam);
+							console.log(targets);
+						}
 						break;
 					case TargetType.FriendlyOne:
 						targets = [
@@ -174,8 +219,6 @@ export class Entity {
 				// no point in giving the ai a second chance.
 				this.endTurnFlag = true;
 			}
-
-			// this.game.currentLevel!.nextTurn();
 		}
 	}
 	turnEnd() {
@@ -262,10 +305,12 @@ export class Entity {
 			this.items.forEach((item) =>
 				item.passives?.onEntityHealing?.(item, attack)
 			);
-			const effectiveDamage = Math.min(
-				this.maxHealth - this.health,
-				(attack.scaleFactor || 1) * attack.gauge +
-					(attack.flatFactor || 0)
+			const effectiveDamage = Math.floor(
+				Math.min(
+					this.maxHealth - this.health,
+					(attack.scaleFactor || 1) * attack.gauge +
+						(attack.flatFactor || 0)
+				)
 			);
 			this.health += effectiveDamage;
 
@@ -278,17 +323,15 @@ export class Entity {
 			this.items.forEach((item) =>
 				item.passives?.onEntityDamaging?.(item, attack)
 			);
-			console.log(
-				attack.nonlethal,
-				attack.nonlethal ? this.health - 1 : this.health,
-				this
-			);
-			const effectiveDamage = Math.max(
-				0,
-				Math.min(
-					attack.nonlethal ? this.health - 1 : this.health,
-					(attack.scaleFactor || 1) * attack.gauge +
-						(attack.flatFactor || 0)
+
+			const effectiveDamage = Math.floor(
+				Math.max(
+					0,
+					Math.min(
+						attack.nonlethal ? this.health - 1 : this.health,
+						(attack.scaleFactor || 1) * attack.gauge +
+							(attack.flatFactor || 0)
+					)
 				)
 			);
 			this.health -= effectiveDamage;
@@ -307,7 +350,7 @@ export class Entity {
 					entity: this,
 					attack: attack,
 				});
-				this.game.currentLevel!.removeEntity(this);
+				(this.game.level as Battle).removeEntity(this);
 			}
 			return res;
 		}

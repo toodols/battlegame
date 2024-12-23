@@ -1,7 +1,7 @@
 import { Item, ItemType, destroyItem } from "..";
 import { AttackType } from "../../attack";
 import { Entity } from "../../entity";
-import { roll, withProps } from "../items";
+import { withProps } from "../items";
 import { Desirability } from "..";
 
 export const poisoned = {
@@ -18,7 +18,7 @@ export const poisoned = {
 				onEntityTurnStart: (self) => {
 					self.owner.doDamage(self.owner, {
 						source: item,
-						gauge: roll(6) + roll(6),
+						gauge: owner.roll(6) + owner.roll(6),
 						nonlethal: false,
 						type: AttackType.Poison,
 					});

@@ -1,13 +1,13 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { ItemDescriptor, roll, withProps } from "../items";
+import { ItemDescriptor, withProps } from "../items";
 
 export const smash: ItemDescriptor = {
 	name: "Smash",
 	type: ItemType.Ability,
 	id: "smash",
-	description: "Deals 2d6 physical damage to every entity.",
+	description: "Deals 3d6 physical damage to every entity.",
 	init: (owner: Entity): Item => {
 		return {
 			owner,
@@ -15,13 +15,13 @@ export const smash: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyAll,
-					usageType: "per-turn",
-					usageEnergyCost: 20,
+					usageType: UsageType.PerTurn,
+					usageEnergyCost: 40,
 					use: (self, targets: Entity[]) => {
 						for (const target of targets) {
 							let damage = {
 								type: AttackType.Physical,
-								gauge: roll(6) + roll(6),
+								gauge: owner.roll(6) + owner.roll(6),
 							};
 							let res = self.owner.doDamage(target, damage);
 							self.owner.game.io.onOutputEvent({

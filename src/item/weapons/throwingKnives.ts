@@ -1,7 +1,7 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType } from "../../attack";
+import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { withProps, items, ItemDescriptor, roll } from "../items";
+import { withProps, items, ItemDescriptor, } from "../items";
 
 export const throwingKnives: ItemDescriptor = {
 	name: "Throwing Knives",
@@ -19,12 +19,13 @@ export const throwingKnives: ItemDescriptor = {
 				default: {
 					targetType: TargetType.EnemyOne,
 					uses: 3,
-					usageType: "per-item-per-turn",
+					usageType: UsageType.PerItemPerTurn,
 					destroyedAfterUses: true,
 					use: (self, [target]: Entity[]) => {
 						let res = self.owner.doDamage(target, {
 							type: AttackType.Physical,
-							gauge: roll(6) + roll(6) + roll(6),
+							gauge:
+								owner.roll(6) + owner.roll(6) + owner.roll(6),
 							source: self.owner,
 						});
 						self.owner.game.io.onOutputEvent({

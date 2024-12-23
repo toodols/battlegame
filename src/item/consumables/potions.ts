@@ -1,5 +1,5 @@
 import { ItemType, Item } from "..";
-import { AttackType, TargetType } from "../../attack";
+import { AttackType, TargetType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, items, withProps } from "../items";
 import { poisoned } from "../statuses/poisoned";
@@ -19,7 +19,7 @@ export const weaknessPotion: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyOne,
-					usageType: "unlimited",
+					usageType: UsageType.Unlimited,
 					use: (self, [target]: Entity[]) => {
 						target.addItem(weakness.init(target));
 						return { ok: true };
@@ -46,7 +46,7 @@ export const healPotion: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.FriendlyOne,
-					usageType: "unlimited",
+					usageType: UsageType.Unlimited,
 					use: (self, [target]: Entity[]) => {
 						self.owner.doDamage(target, {
 							gauge: 30,
@@ -77,7 +77,7 @@ export const poisonPotion: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyOne,
-					usageType: "unlimited",
+					usageType: UsageType.Unlimited,
 					use: (self, [target]: Entity[]) => {
 						target.addItem(poisoned.init(target));
 						return { ok: true };
@@ -104,7 +104,7 @@ export const slownessPotion: ItemDescriptor = {
 			actives: {
 				default: {
 					targetType: TargetType.EnemyOne,
-					usageType: "unlimited",
+					usageType: UsageType.Unlimited,
 					use: (self, [target]: Entity[]) => {
 						target.addItem(items.slowness.init(target));
 						return { ok: true };
