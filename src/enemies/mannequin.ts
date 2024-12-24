@@ -5,6 +5,7 @@ import { Game, Result } from "../game";
 import { ItemType, cloneItem } from "../item";
 import { ItemDescriptor, items, withProps } from "../item/items";
 import { strike } from "../item/abilities/strike";
+import { targetIsEntities } from "../assertions";
 export const copy: ItemDescriptor = {
 	name: "Copy",
 	description: "Copies a random ability from a target. 3 Uses",
@@ -19,8 +20,11 @@ export const copy: ItemDescriptor = {
 					usageType: UsageType.PerTurn,
 					targetType: TargetType.EnemyOne,
 					usageEnergyCost: 30,
-					use: (self, [target]: Entity[]): Result => {
-						const candidates = target.items.filter(
+					use: (self, target): Result => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						const entityTarget = target.entities[0];
+						const candidates = entityTarget.items.filter(
 							(item) => item.type === ItemType.Ability
 						);
 						const candidate =

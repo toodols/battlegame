@@ -21,11 +21,11 @@ export const brew: ItemDescriptor = {
 			transferrable: false,
 			actives: {
 				default: {
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.PerTurn,
 					usageEnergyCost: 25,
 					appeal: () => APPEAL.FAVORABLE,
-					use: (self, targets) => {
+					use: (self, _) => {
 						const potionsPool = [
 							weaknessPotion,
 							poisonPotion,

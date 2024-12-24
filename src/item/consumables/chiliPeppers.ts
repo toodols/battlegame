@@ -18,7 +18,7 @@ export const chiliPeppers = {
 			actives: {
 				default: {
 					appeal: () => APPEAL.LOW,
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.Unlimited,
 					use: (self, _targets) => {
 						self.owner.addItem(items.spicy.init(self.owner));

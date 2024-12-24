@@ -19,9 +19,9 @@ export const zombieSpawnEgg = {
 			transferrable: true,
 			actives: {
 				default: {
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.Unlimited,
-					use: (self, _targets) => {
+					use: (self, _) => {
 						const entity = zombie.init(self.owner.game);
 						entity.name = "Friendly " + entity.name;
 						(self.owner.game.level as Battle).addEntity(

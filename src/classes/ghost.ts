@@ -8,6 +8,7 @@ import { ItemType } from "../item";
 import { TargetType, UsageType } from "../attack";
 import { zombieSpawnEgg } from "../item/consumables/zombieSpawnEgg";
 import { Battle } from "../level";
+import { targetIsEntities } from "../assertions";
 
 // :)
 const combatRedeployment: ItemDescriptor = {
@@ -24,8 +25,10 @@ const combatRedeployment: ItemDescriptor = {
 					usageEnergyCost: 20,
 					description: "Summons a friendly to act immediately",
 					targetType: TargetType.FriendlyOne,
-					use: (self, [target]: Entity[]) => {
-						target.actionValue = -1;
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						target.entities[0].actionValue = -1;
 						(self.owner.game.level as Battle).reorder();
 						return { ok: true };
 					},

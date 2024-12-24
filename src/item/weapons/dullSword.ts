@@ -1,4 +1,5 @@
 import { ItemType, Item } from "..";
+import { targetIsEntities } from "../../assertions";
 import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { withProps, items, ItemDescriptor } from "../items";
@@ -21,16 +22,18 @@ export const dullSword: ItemDescriptor = {
 						"Sweep: At the cost of 20 energy, do 2d4 damage to all targets",
 					targetType: TargetType.EnemyAll,
 					usageType: UsageType.PerTurn,
-					use: (self, targets: Entity[]) => {
-						for (const target of targets) {
-							let res = self.owner.doDamage(target, {
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						for (const entity of target.entities) {
+							let res = self.owner.doDamage(entity, {
 								type: AttackType.Physical,
 								gauge: owner.roll(4) + owner.roll(4),
 								source: self.owner,
 							});
 							self.owner.game.io.onOutputEvent({
 								type: "entity-do-damage",
-								target,
+								target: entity,
 								attack: res.attack,
 								effectiveDamage: res.effectiveDamage,
 							});
@@ -45,8 +48,10 @@ export const dullSword: ItemDescriptor = {
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.PerTurn,
 					usageEnergyCost: 0,
-					use: (self, [target]: Entity[]) => {
-						let res = self.owner.doDamage(target, {
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						let res = self.owner.doDamage(target.entities[0], {
 							type: AttackType.Physical,
 							gauge:
 								owner.roll(4) +
@@ -57,7 +62,7 @@ export const dullSword: ItemDescriptor = {
 						});
 						self.owner.game.io.onOutputEvent({
 							type: "entity-do-damage",
-							target,
+							target: target.entities[0],
 							attack: res.attack,
 							effectiveDamage: res.effectiveDamage,
 						});

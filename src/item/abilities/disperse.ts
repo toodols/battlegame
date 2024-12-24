@@ -34,10 +34,10 @@ export const disperse: ItemDescriptor = {
 			transferrable: false,
 			actives: {
 				default: {
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.PerTurn,
 					usageEnergyCost: 50,
-					use: (self, [target]: Entity[]) => {
+					use: (self, _) => {
 						self.owner.getItem("mist").data.stacks += 1;
 						self.owner.setMaxHealth(self.owner.maxHealth * 0.9);
 						self.owner.game.io.onOutputEvent({

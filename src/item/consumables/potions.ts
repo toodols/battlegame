@@ -1,4 +1,5 @@
 import { ItemType, Item } from "..";
+import { targetIsEntities } from "../../assertions";
 import { AttackType, TargetType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, items, withProps } from "../items";
@@ -20,8 +21,12 @@ export const weaknessPotion: ItemDescriptor = {
 				default: {
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.Unlimited,
-					use: (self, [target]: Entity[]) => {
-						target.addItem(weakness.init(target));
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						target.entities[0].addItem(
+							weakness.init(target.entities[0])
+						);
 						return { ok: true };
 					},
 					destroyedAfterUses: true,
@@ -47,8 +52,10 @@ export const healPotion: ItemDescriptor = {
 				default: {
 					targetType: TargetType.FriendlyOne,
 					usageType: UsageType.Unlimited,
-					use: (self, [target]: Entity[]) => {
-						self.owner.doDamage(target, {
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						self.owner.doDamage(target.entities[0], {
 							gauge: 30,
 							type: AttackType.Healing,
 							source: self.owner,
@@ -78,8 +85,12 @@ export const poisonPotion: ItemDescriptor = {
 				default: {
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.Unlimited,
-					use: (self, [target]: Entity[]) => {
-						target.addItem(poisoned.init(target));
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						target.entities[0].addItem(
+							poisoned.init(target.entities[0])
+						);
 						return { ok: true };
 					},
 					destroyedAfterUses: true,
@@ -105,8 +116,12 @@ export const slownessPotion: ItemDescriptor = {
 				default: {
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.Unlimited,
-					use: (self, [target]: Entity[]) => {
-						target.addItem(items.slowness.init(target));
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						target.entities[0].addItem(
+							items.slowness.init(target.entities[0])
+						);
 						return { ok: true };
 					},
 					destroyedAfterUses: true,

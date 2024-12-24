@@ -1,3 +1,4 @@
+import { cliMain } from "./cli";
 import { discord } from "./discord";
 import { configDotenv } from "dotenv";
 
@@ -8,4 +9,8 @@ function discordMain() {
 	discord();
 }
 
-discordMain();
+if (process.argv[2] === "cli") {
+	cliMain();
+} else {
+	discordMain();
+}

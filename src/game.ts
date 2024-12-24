@@ -235,13 +235,13 @@ export class Game {
 							type: "entity-use-item",
 							item: command.item,
 							active,
-							targets: command.targets,
+							target: command.target,
 							entity: player.entity!,
 						});
 						const res = useItemActive(
 							command.item,
 							active,
-							command.targets
+							command.target
 						);
 						if (res.ok) {
 							this.level.doTurns();

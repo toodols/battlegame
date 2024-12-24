@@ -138,7 +138,7 @@ export class Battle implements Level {
 		this.currentEntity.turnStart();
 	}
 
-	getEnemyOf(entity: Entity): Team {
+	getEnemiesOf(entity: Entity): Team {
 		if (entity.team === this.enemies) {
 			return this.players;
 		} else {

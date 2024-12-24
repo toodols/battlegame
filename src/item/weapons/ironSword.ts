@@ -1,7 +1,8 @@
 import { ItemType, Item } from "..";
+import { targetIsEntities } from "../../assertions";
 import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
-import { withProps, items, ItemDescriptor, } from "../items";
+import { withProps, items, ItemDescriptor } from "../items";
 
 export const ironSword: ItemDescriptor = {
 	name: "Iron Sword",
@@ -21,9 +22,11 @@ export const ironSword: ItemDescriptor = {
 					usageEnergyCost: 30,
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.PerTurn,
-					use: (self, [target]: Entity[]) => {
-						if (50 / (target.maxHealth - 10)) {
-							target.actionValue -= 50;
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						if (50 / (target.entities[0].maxHealth - 10)) {
+							target.entities[0].actionValue -= 50;
 						}
 						return { ok: true };
 					},
@@ -35,16 +38,18 @@ export const ironSword: ItemDescriptor = {
 					usageEnergyCost: 30,
 					targetType: TargetType.EnemyAll,
 					usageType: UsageType.PerTurn,
-					use: (self, targets: Entity[]) => {
-						for (const target of targets) {
-							let res = self.owner.doDamage(target, {
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						for (const entity of target.entities) {
+							let res = self.owner.doDamage(entity, {
 								type: AttackType.Physical,
 								gauge: owner.roll(6) + owner.roll(6),
 								source: self.owner,
 							});
 							self.owner.game.io.onOutputEvent({
 								type: "entity-do-damage",
-								target,
+								target: entity,
 								attack: res.attack,
 								effectiveDamage: res.effectiveDamage,
 							});
@@ -59,8 +64,10 @@ export const ironSword: ItemDescriptor = {
 					usageType: UsageType.PerTurn,
 					description: "Deals 4d6 damage to all targets",
 					usageEnergyCost: 0,
-					use: (self, [target]: Entity[]) => {
-						let res = self.owner.doDamage(target, {
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						let res = self.owner.doDamage(target.entities[0], {
 							type: AttackType.Physical,
 							gauge:
 								owner.roll(6) +
@@ -71,7 +78,7 @@ export const ironSword: ItemDescriptor = {
 						});
 						self.owner.game.io.onOutputEvent({
 							type: "entity-do-damage",
-							target,
+							target: target.entities[0],
 							attack: res.attack,
 							effectiveDamage: res.effectiveDamage,
 						});

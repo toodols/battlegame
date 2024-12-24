@@ -1,4 +1,5 @@
 import { ItemType, Item, APPEAL } from "..";
+import { targetIsEntities } from "../../assertions";
 import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, withProps, items } from "../items";
@@ -18,11 +19,13 @@ export const transfer: ItemDescriptor = {
 					usageEnergyCost: 30,
 					targetType: TargetType.FriendlyOne,
 					usageType: UsageType.PerTurn,
-					use: (self, [target]: Entity[]) => {
-						const res = target.recoverEnergy(30);
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						const res = target.entities[0].recoverEnergy(30);
 						self.owner.game.io.onOutputEvent({
 							type: "message",
-							message: `Gave ${res} to **${target.name}**`,
+							message: `Gave ${res} to **${target.entities[0].name}**`,
 						});
 						return { ok: true };
 					},

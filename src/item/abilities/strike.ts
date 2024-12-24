@@ -1,4 +1,5 @@
 import { ItemType, Item, APPEAL } from "..";
+import { targetIsEntities } from "../../assertions";
 import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, withProps, items } from "../items";
@@ -17,16 +18,21 @@ export const strike: ItemDescriptor = {
 					appeal: () => APPEAL.LOW,
 					targetType: TargetType.EnemyOne,
 					usageType: UsageType.PerTurn,
-					use: (self, [target]: Entity[]) => {
+					use: (self, target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
 						let attack = {
 							type: AttackType.Physical,
 							gauge: owner.roll(6) + owner.roll(6),
 							source: self.owner,
 						};
-						let res = self.owner.doDamage(target, attack);
+						let res = self.owner.doDamage(
+							target.entities[0],
+							attack
+						);
 						self.owner.game.io.onOutputEvent({
 							type: "entity-do-damage",
-							target,
+							target: target.entities[0],
 							attack: res.attack,
 							effectiveDamage: res.effectiveDamage,
 						});

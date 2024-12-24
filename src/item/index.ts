@@ -1,4 +1,5 @@
 import { AttackResult, Entity } from "../entity";
+import { Target } from "../attack";
 import { Attack, TargetType, UsageType } from "../attack";
 import { Result } from "../game";
 import { Battle } from "../level";
@@ -34,6 +35,7 @@ export interface Item {
 	owner: Entity;
 	id: string;
 	name: string;
+	level?: number;
 	type: ItemType;
 	ranged?: boolean;
 	description: string;
@@ -104,32 +106,40 @@ export function canUseItemActive(item: Item, active: Active): Result {
 export function useItemActive(
 	item: Item,
 	active: Active,
-	targets: Entity[]
+	target: Target
 ): Result {
 	const game = item.owner.game;
 	if (!active) {
 		throw new Error("no active");
 	}
-	targets = targets.filter((t) => t !== undefined && t.isAlive());
-	if (active.targetType === TargetType.EnemyAll) {
-		targets = (item.owner.game.level as Battle)
-			.getEnemyOf(item.owner)
-			.filter((entity) => entity.isAlive());
-	} else if (active.targetType === TargetType.FriendlyAll) {
-		targets = item.owner.team!.filter((entity) => entity.isAlive());
-	}
 	if (active.wasUsedThisTurn) {
 		return { ok: false, error: "Item was already used this turn" };
 	}
-	if (
-		(targets.length === 0 && active.targetType !== TargetType.Self) ||
-		(active.targetType === TargetType.EnemyOne &&
-			targets[0].team !==
-				(game.level as Battle).getEnemyOf(item.owner)) ||
-		(active.targetType === TargetType.FriendlyOne &&
-			targets[0].team !== item.owner.team)
-	) {
-		return { ok: false, error: "Bad Targets" };
+	if (target.type == "entities") {
+		target.entities = target.entities.filter(
+			(t) => t !== undefined && t.isAlive()
+		);
+		// filter out dead enemies
+		if (active.targetType === TargetType.EnemyAll) {
+			target.entities = (item.owner.game.level as Battle)
+				.getEnemiesOf(item.owner)
+				.filter((entity) => entity.isAlive());
+		} else if (active.targetType === TargetType.FriendlyAll) {
+			target.entities = item.owner.team!.filter((entity) =>
+				entity.isAlive()
+			);
+		}
+
+		// bad targets?
+		if (
+			(active.targetType === TargetType.EnemyOne &&
+				target.entities[0].team !==
+					(game.level as Battle).getEnemiesOf(item.owner)) ||
+			(active.targetType === TargetType.FriendlyOne &&
+				target.entities[0].team !== item.owner.team)
+		) {
+			return { ok: false, error: "Bad Targets" };
+		}
 	}
 	if (active.usageEnergyCost) {
 		const consumeEnergyResult = item.owner.consumeEnergy(
@@ -144,9 +154,9 @@ export function useItemActive(
 	} else if (active.usageType === UsageType.PerItemPerTurn) {
 		active.wasUsedThisTurn = true;
 	}
-	active.use(item, targets);
+	active.use(item, target);
 	item.owner.items.forEach((i) =>
-		i.passives?.onEntityUseItem?.(i, item, active, targets)
+		i.passives?.onEntityUseItem?.(i, item, active, target)
 	);
 	if (active.uses !== undefined) {
 		active.uses -= 1;
@@ -196,7 +206,7 @@ export interface Passives {
 		self: Item,
 		item: Item,
 		active: Active,
-		targets: Entity[]
+		target: Target
 	) => void;
 
 	onEntityDoHealing?: (self: Item, target: Entity, healing: Attack) => void;
@@ -224,12 +234,12 @@ export interface Active {
 	description?: string;
 	canUse?: () => Result;
 	// undefined to defer to random selection
-	targeting?: (item: Item, active: Active) => Entity[] | undefined;
+	targeting?: (item: Item, active: Active) => Target;
 	usageEnergyCost?: number;
 	name?: string;
 	appeal?: (self: Item) => number;
 	id?: string;
 	uses?: number;
 	destroyedAfterUses?: boolean;
-	use: (self: Item, target: Entity[]) => Result;
+	use: (self: Item, target: Target) => Result;
 }

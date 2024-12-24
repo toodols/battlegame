@@ -1,6 +1,8 @@
 import { ItemType, Item, APPEAL } from "..";
+import { targetIsEntities } from "../../assertions";
 import { TargetType, AttackType, UsageType } from "../../attack";
 import { Entity } from "../../entity";
+import { Battle } from "../../level";
 import { ItemDescriptor, items, withProps } from "../items";
 
 export const heal: ItemDescriptor = {
@@ -21,11 +23,16 @@ export const heal: ItemDescriptor = {
 						(1 - self.owner.health / self.owner.health) *
 						APPEAL.HIGH,
 					targeting: (self, active) => {
-						if (self.owner.health < 30) {
-							return [self.owner];
-						}
+						return {
+							type: "entities",
+							entities: [self.owner],
+						};
 					},
-					use: (self, [target]: Entity[]) => {
+					use: (self, target) => {
+						if (!targetIsEntities(target)) {
+							return { ok: false, error: "Invalid target" };
+						}
+						let entity = target.entities[0];
 						let healing = {
 							type: AttackType.Healing,
 							gauge:
@@ -35,10 +42,10 @@ export const heal: ItemDescriptor = {
 								owner.roll(6),
 							source: self.owner,
 						};
-						let res = target.doDamage(target, healing);
+						let res = entity.doDamage(entity, healing);
 						self.owner.game.io.onOutputEvent({
 							type: "entity-do-healing",
-							target,
+							target: entity,
 							attack: res.attack,
 							effectiveDamage: res.effectiveDamage,
 						});

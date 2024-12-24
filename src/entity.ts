@@ -1,5 +1,5 @@
 import { Game, Result, selectRandomFromPool } from "./game";
-import { Attack, AttackType, TargetType } from "./attack";
+import { Attack, AttackType, Target, TargetType } from "./attack";
 import { PlayerId } from "./game";
 import {
 	APPEAL,
@@ -156,49 +156,64 @@ export class Entity {
 					};
 				})
 			);
-			let targets: Entity[] | undefined;
+			let target: Target | undefined;
 			if (active.targeting) {
-				targets = active.targeting(item, active);
+				target = active.targeting(item, active);
 			}
-			if (targets === undefined) {
+			if (target === undefined) {
 				switch (active.targetType) {
 					case TargetType.EnemyAll:
-						targets = (this.game.level as Battle)
-							.getEnemyOf(this)
-							.filter((entity) => entity.isAlive());
+						target = {
+							type: "entities",
+							entities: (this.game.level as Battle)
+								.getEnemiesOf(this)
+								.filter((entity) => entity.isAlive()),
+						};
 						break;
 					case TargetType.FriendlyAll:
-						targets = this.team!.filter((entity) =>
-							entity.isAlive()
-						);
+						target = {
+							type: "entities",
+							entities: this.team!.filter((entity) =>
+								entity.isAlive()
+							),
+						};
 						break;
 					case TargetType.EnemyOne:
 						const enemyTeam = (this.game.level as Battle)
-							.getEnemyOf(this)
+							.getEnemiesOf(this)
 							.filter((v) => v.isAlive());
-						targets = [
-							enemyTeam[
-								Math.floor(Math.random() * enemyTeam.length)
+						target = {
+							type: "entities",
+							entities: [
+								enemyTeam[
+									Math.floor(Math.random() * enemyTeam.length)
+								],
 							],
-						];
-						if (targets[0] === undefined) {
+						};
+						if (target.entities[0] === undefined) {
 							this.game.io.onOutputEvent({
 								type: "message",
-								message: "ERROR CHECK LOGS",
+								message: "ERROR (Check logs)",
 							});
 							console.log(enemyTeam);
-							console.log(targets);
+							console.log(target);
 						}
 						break;
 					case TargetType.FriendlyOne:
-						targets = [
-							this.team!.filter((entity) => entity.isAlive())[
-								Math.floor(Math.random() * this.team!.length)
+						target = {
+							type: "entities",
+							entities: [
+								this.team!.filter((entity) => entity.isAlive())[
+									Math.floor(
+										Math.random() * this.team!.length
+									)
+								],
 							],
-						];
+						};
 						break;
-					case TargetType.Self:
-						targets = [this];
+					default:
+						this.endTurnFlag = true;
+						return;
 				}
 			}
 			this.game.io.onOutputEvent({
@@ -206,9 +221,9 @@ export class Entity {
 				item,
 				active,
 				entity: this,
-				targets,
+				target,
 			});
-			const result = useItemActive(item, active, targets);
+			const result = useItemActive(item, active, target);
 			if (result.ok) {
 				this.endTurnFlag = true;
 			} else {

@@ -23,12 +23,21 @@ export enum AttackType {
 	Necrotic,
 	Psychic,
 }
+
 export enum TargetType {
 	FriendlyOne,
 	EnemyOne,
 	FriendlyAll,
 	EnemyAll,
-	Self,
+	Anyone,
+
+	Number,
+
+	Raw,
+
+	Item,
+
+	None,
 }
 
 export enum UsageType {
@@ -36,3 +45,16 @@ export enum UsageType {
 	PerItemPerTurn,
 	Unlimited,
 }
+export type Target =
+	| {
+			type: "entities";
+			entities: Entity[];
+	  }
+	| {
+			type: "number";
+			value: number;
+	  }
+	| {
+			type: "raw";
+			value: string;
+	  };

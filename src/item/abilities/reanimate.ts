@@ -17,9 +17,9 @@ export const reanimate: ItemDescriptor = {
 			actives: {
 				default: {
 					usageEnergyCost: 50,
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.PerTurn,
-					use: (self, _target: Entity[]) => {
+					use: (self, _) => {
 						const entity = zombie.init(self.owner.game);
 						entity.name = "Reanimated " + entity.name;
 						(self.owner.game.level as Battle).addEntity(

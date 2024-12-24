@@ -18,9 +18,9 @@ export const npcRest: ItemDescriptor = {
 					appeal: (self) =>
 						(1 - self.owner.energy / self.owner.maxEnergy) *
 						APPEAL.FAVORABLE,
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.PerTurn,
-					use: (self, [_target]: Entity[]) => {
+					use: (self, _) => {
 						const energyRecovery =
 							owner.roll(6) +
 							owner.roll(6) +

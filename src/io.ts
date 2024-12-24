@@ -1,5 +1,6 @@
 import { Attack } from "./attack";
 import { Entity } from "./entity";
+import { Target } from "./attack";
 import { Active, Item } from "./item";
 import { PlayerId, Player } from "./game";
 import { Shop } from "./level";
@@ -24,7 +25,7 @@ export type IOCommand = (
 	| {
 			type: "use-item";
 			item: Item;
-			targets: Entity[];
+			target: Target;
 			playerId: PlayerId;
 			active: Active;
 	  }
@@ -98,7 +99,7 @@ export type IOEvent =
 			entity: Entity;
 			item: Item;
 			active: Active;
-			targets: Entity[];
+			target: Target;
 	  }
 	| {
 			type: "item-bought";

@@ -1,5 +1,6 @@
 import { ItemType, Item } from "..";
-import { TargetType, AttackType, UsageType } from "../../attack";
+import { targetIsEntities } from "../../assertions";
+import { TargetType, AttackType, UsageType, Target } from "../../attack";
 import { Entity } from "../../entity";
 import { ItemDescriptor, withProps, items } from "../items";
 
@@ -18,17 +19,19 @@ export const fireball: ItemDescriptor = {
 					targetType: TargetType.EnemyAll,
 					usageType: UsageType.PerTurn,
 					usageEnergyCost: 30,
-					use: (self, targets: Entity[]) => {
-						for (const target of targets) {
+					use: (self, target: Target) => {
+						if (!targetIsEntities(target))
+							return { ok: false, error: "Invalid target" };
+						for (const entity of target.entities) {
 							let damage = {
 								type: AttackType.Fire,
 								gauge: owner.roll(6) + owner.roll(6),
 								source: self.owner,
 							};
-							let res = self.owner.doDamage(target, damage);
+							let res = self.owner.doDamage(entity, damage);
 							self.owner.game.io.onOutputEvent({
 								type: "entity-do-damage",
-								target,
+								target: entity,
 								attack: res.attack,
 								effectiveDamage: res.effectiveDamage,
 							});

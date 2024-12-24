@@ -18,9 +18,9 @@ export const energyDrink: ItemDescriptor = {
 				default: {
 					appeal: (self) =>
 						self.owner.energy < 10 ? APPEAL.NORMAL : APPEAL.NO,
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.Unlimited,
-					use: (self, [_target]: Entity[]) => {
+					use: (self, _) => {
 						self.owner.recoverEnergy(30);
 						return { ok: true };
 					},

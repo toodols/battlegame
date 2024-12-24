@@ -14,9 +14,9 @@ export const rest: ItemDescriptor = {
 			transferrable: false,
 			actives: {
 				default: {
-					targetType: TargetType.Self,
+					targetType: TargetType.None,
 					usageType: UsageType.PerTurn,
-					use: (self, [_target]: Entity[]) => {
+					use: (self, _) => {
 						const healthRecovery = owner.roll(6) + owner.roll(6);
 						const energyRecovery =
 							owner.roll(6) +
